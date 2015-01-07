@@ -82,12 +82,17 @@ You can also watch the whole boot sequence on this port, which can be useful for
 Be careful with this cable. If you trip over it, you can pull the connector off the board, which will require your robot to be sent off to the repair shop to resolder it.
 
 \subsection*{SSH over WiFi}
-The MAEBots are programmed to connect to an open network named "maenet", configured on the 192.168.3 network. Each robot will connect with an IP address of 192.168.3.{S/N}. The 
+The MAEBots are programmed to connect to an open network named "maenet2", configured on the 192.168.3 network. Each robot will connect with an IP address of 192.168.3.XXX, where XXX is based on the robot's serial number. The 
 serial numbers are written on the top and bottom of each robot. You can connect via Wifi with the command:
 
 \begin{verbatim}
-  ssh teamN@192.168.3{S/N}
+For S/N [1-9]:
+  ssh teamN@192.168.3.10{S/N}
+
+For S/N [10-14]:
+  ssh teamN@192.168.3.1{S/N}
+
 \end{verbatim}
 
-
 \end{document}
+
