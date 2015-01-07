@@ -1,6 +1,6 @@
 # README #
 
-Welcome to the ROBOTICS 550 Lab course repository.
+Welcome to the EECS 467 Lab course repository.
 
 ### How do I get set up? ###
 
@@ -9,8 +9,8 @@ Follow the instructions in the `INSTALL` file provided in the root directory of 
 ### Who do I talk to? ###
 
 * Instructors:
-    + Prof. Ella Atkins <ematkins@umich.edu>
-    + Prof. Ryan Eustice <eustice@umich.edu>
+    + Prof. Benjamin Kuipers <kuipers@umich.edu>
 * Other community or team contact:
-    + Lab Tech: Dr. Peter Gaskell <pgaskell@umich.edu>
-    + GSI: Mr. John Wang <jnwang@umich.edu>
+    + GSI: Paul Foster <pfost@umich.edu>
+    + GSI: Collin Johnson <collinej@umich.edu>
+
