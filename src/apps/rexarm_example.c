@@ -18,7 +18,7 @@
 #include "common/timestamp.h"
 #include "math/math_util.h"
 
-#define NUM_SERVOS 4
+#define NUM_SERVOS 6
 
 typedef struct state state_t;
 struct state
