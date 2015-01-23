@@ -12,13 +12,6 @@
 # -Wno-format-zero-length: permit printf("");
 # -Wno-unused-parameter: permit a function to ignore an argument
 
-CFLAGS_SHARED = -g -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_REENTRANT \
-		-Wall -Wno-unused-parameter -pthread -fPIC
-
-CFLAGS_STD   := -std=gnu99 -Wno-format-zero-length $(CFLAGS_SHARED)
-CXXFLAGS_STD := -std=c++0x $(CFLAGS_SHARED)
-LDFLAGS_STD  := -lm -lpthread
-
 ROOT_PATH    := $(subst /src/common.mk,,$(realpath $(lastword $(MAKEFILE_LIST))))
 SRC_PATH     := $(ROOT_PATH)/src
 BIN_PATH     := $(ROOT_PATH)/bin
@@ -27,6 +20,13 @@ JAVA_PATH    := $(ROOT_PATH)/java
 MATLAB_PATH  := $(ROOT_PATH)/matlab
 SOLNS_PATH   := $(ROOT_PATH)/solns
 CONFIG_DIR   := $(shell pwd)/../../config
+
+CFLAGS_SHARED = -g -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_REENTRANT \
+		-Wall -Wno-unused-parameter -pthread -fPIC -I$(SRC_PATH)
+
+CFLAGS_STD   := -std=gnu99 -Wno-format-zero-length $(CFLAGS_SHARED)
+CXXFLAGS_STD := -std=c++0x $(CFLAGS_SHARED)
+LDFLAGS_STD  := -lm -lpthread
 
 CC           := gcc
 CXX          := g++
@@ -141,6 +141,10 @@ libdeps = $(filter $(wildcard $(LIB_PATH)/*.a), $(patsubst -l%, $(LIB_PATH)/lib%
 CFLAGS_COMMON  := -I$(SRC_PATH) -DCONFIG_DIR='"$(CONFIG_DIR)"'
 LDFLAGS_COMMON := -L$(LIB_PATH) -lcommon $(LDFLAGS_STD)
 
+# mapping
+CFLAGS_MAPPING  := -I$(SRC_PATH) $(CFLAGS_STD)
+LDFLAGS_MAPPING := -L$(LIB_PATH) -lmapping $(LDFLAGS_STD)
+
 # math
 CFLAGS_MATH  := -I$(SRC_PATH) $(CFLAGS_COMMON)
 LDFLAGS_MATH := -L$(LIB_PATH) -lmath $(LDFLAGS_COMMON)
@@ -185,7 +189,7 @@ LDFLAGS_EECS467 := -L$(LIB_PATH) -leecs467 $(LDFLAGS_VX_GTK) $(LDFLAGS_IMAGESOUR
 
 %.o: %.cpp
 	@echo "    $@"
-	@$(CXX) -c -o $@ $< $(CXXFLAGS)
+	@$(CXX) $(CXXFLAGS) -c $<
 
 
 MAKEFLAGS += --no-print-directory

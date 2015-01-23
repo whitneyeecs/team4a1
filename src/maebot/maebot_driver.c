@@ -19,6 +19,7 @@
 #include "lcmtypes/maebot_sensor_data_t.h"
 #include "lcmtypes/maebot_leds_command_t.h"
 #include "lcmtypes/maebot_targeting_laser_command_t.h"
+#include <common/timestamp.h>
 
 #include "types.h"
 
@@ -250,8 +251,11 @@ sama5_state_thread (void *arg)
 
 		pthread_mutex_lock (&statelock);
 
-        shared_state.motor_feedback.utime = state.utime;
-        shared_state.sensor_data.utime = state.utime;
+//         shared_state.motor_feedback.utime = state.utime;
+//         shared_state.sensor_data.utime = state.utime;
+        
+        shared_state.motor_feedback.utime = utime_now();
+        shared_state.sensor_data.utime    = shared_state.motor_feedback.utime;
 
 		// Copy motor feedback
 		shared_state.motor_feedback.encoder_left_ticks = state.encoder_left_ticks;
@@ -262,7 +266,7 @@ sama5_state_thread (void *arg)
 		if (state.flags & flags_motor_left_reverse_cmd_mask)
             shared_state.motor_feedback.motor_left_commanded_speed *= -1.0;
 
-		shared_state.motor_feedback.motor_left_commanded_speed =
+		shared_state.motor_feedback.motor_right_commanded_speed =
             (float)state.motor_right_speed_cmd / UINT16_MAX;
 		if (state.flags & flags_motor_right_reverse_cmd_mask)
             shared_state.motor_feedback.motor_right_commanded_speed *= -1.0;
