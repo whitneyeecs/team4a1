@@ -171,26 +171,26 @@ int maebot_laser_scan_t::_decodeNoHash(const void *buf, int offset, int maxlen)
     tlen = __int32_t_decode_array(buf, offset + pos, maxlen - pos, &this->num_ranges, 1);
     if(tlen < 0) return tlen; else pos += tlen;
 
+    this->ranges.resize(this->num_ranges);
     if(this->num_ranges) {
-        this->ranges.resize(this->num_ranges);
         tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->ranges[0], this->num_ranges);
         if(tlen < 0) return tlen; else pos += tlen;
     }
 
+    this->thetas.resize(this->num_ranges);
     if(this->num_ranges) {
-        this->thetas.resize(this->num_ranges);
         tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->thetas[0], this->num_ranges);
         if(tlen < 0) return tlen; else pos += tlen;
     }
 
+    this->times.resize(this->num_ranges);
     if(this->num_ranges) {
-        this->times.resize(this->num_ranges);
         tlen = __int64_t_decode_array(buf, offset + pos, maxlen - pos, &this->times[0], this->num_ranges);
         if(tlen < 0) return tlen; else pos += tlen;
     }
 
+    this->intensities.resize(this->num_ranges);
     if(this->num_ranges) {
-        this->intensities.resize(this->num_ranges);
         tlen = __float_decode_array(buf, offset + pos, maxlen - pos, &this->intensities[0], this->num_ranges);
         if(tlen < 0) return tlen; else pos += tlen;
     }

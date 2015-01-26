@@ -4,6 +4,12 @@
 *.obj
 *.elf
 
+bin
+src/lcmtypes/*.cpp
+src/lcmtypes/*.hpp
+
+*.swp
+
 # Precompiled Headers
 *.gch
 *.pch
