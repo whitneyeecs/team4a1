@@ -1,0 +1,20 @@
+struct maebot_map_data_t
+{
+	int64_t utime;
+
+	maebot_occupancy_grid_t grid;
+	// total number of x and y coordinates (number of pts * 2)
+	// pairs of (x, y) coordinates
+	int32_t path_num; 
+	float path[path_num]; 
+	
+	// num ranges of lidar
+	// twice the num ranges of lidar
+	// distances of lidar
+	// adjusted absolute thetas
+	// xy origin of each lidar beam
+	int32_t lidar_num;
+	float lidar_ranges[lidar_num];
+	float lidar_thetas[lidar_num];
+	float lidar_paths[lidar_num][2];
+}

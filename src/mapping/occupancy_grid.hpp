@@ -82,7 +82,6 @@ public:
                   float heightInMeters,
                   float metersPerCell);
     
-    
     // Accessors for the properties of the grid
     std::size_t widthInCells (void) const { return width_; }
     float       widthInMeters(void) const { return width_ * metersPerCell_; }

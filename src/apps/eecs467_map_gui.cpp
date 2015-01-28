@@ -1,0 +1,286 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <string.h>
+#include <math.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+
+// c++
+#include <vector>
+
+// lcm
+#include <lcm/lcm-cpp.hpp>
+#include <lcmtypes/maebot_occupancy_grid_t.hpp>
+#include <lcmtypes/maebot_map_data_t.hpp>
+#include "mapping/occupancy_grid.hpp"
+
+// core api
+#include "vx/vx.h"
+#include "vx/vx_util.h"
+#include "vx/vx_remote_display_source.h"
+#include "vx/gtk/vx_gtk_display_source.h"
+
+// drawables
+#include "vx/vxo_drawables.h"
+
+// common
+#include "common/getopt.h"
+#include "common/pg.h"
+#include "common/zarray.h"
+
+#include "imagesource/image_u32.h"
+#include "imagesource/image_u8.h"
+#include "imagesource/image_source.h"
+#include "imagesource/image_convert.h"
+
+class StateHandler {
+public:
+	// drawing stuff
+	eecs467::OccupancyGrid grid;
+	image_u8_t* im;
+	std::vector<float> path;
+	std::vector<float> lidar_rays;
+	pthread_mutex_t renderMutex;
+
+	// lcm
+	lcm::LCM lcm;
+	pthread_t lcm_pid;
+
+	// vx stuff
+	vx_application_t vxapp;
+	zhash_t * vxlayers;
+	vx_world_t* vxworld;      // where vx objects are live
+	vx_event_handler_t* vxeh; // for getting mouse, key, and touch events
+	vx_gtk_display_source_t* appwrap;
+	pthread_mutex_t vxmutex;
+	pthread_t render_pid;
+
+public:
+	StateHandler() {
+		vxworld = vx_world_create();
+		vxlayers = zhash_create(sizeof(vx_display_t*),
+			sizeof(vx_layer_t*), zhash_ptr_hash, zhash_ptr_equals);
+		vxapp.impl = this;
+		vxapp.display_started = display_started;
+		vxapp.display_finished = display_finished;
+
+		if (pthread_mutex_init(&vxmutex, NULL)) {
+			printf("state mutex not initialized\n");
+			exit(1);
+		}
+
+		if (pthread_mutex_init(&renderMutex, NULL)) {
+			printf("render mutex not initialized\n");
+			exit(1);
+		}
+
+		if (!lcm.good()) {
+			printf("lcm unable to initialize\n");
+			exit(1);
+		}
+
+		im = nullptr;
+
+		lcm.subscribe("MAEBOT_MAP_DATA", &StateHandler::handleLcmMessage, this);
+
+	}
+
+	~StateHandler() {
+		if (im != nullptr) {
+			image_u8_destroy(im);
+		}
+	}
+
+	void handleLcmMessage(const lcm::ReceiveBuffer* rbuf,
+		const std::string& chan, 
+		const maebot_map_data_t* msg) {
+		
+		pthread_mutex_lock(&renderMutex);
+		grid.fromLCM(msg->grid);
+		// assume grid sizes never change
+		if (im == nullptr) {
+			im = image_u8_create(grid.widthInCells(), grid.heightInCells());
+		}
+
+		for (unsigned int i = 0; i < grid.heightInCells(); ++i){
+			for (unsigned int j = 0; j < grid.widthInCells(); ++j) {
+				im->buf[i * im->stride + j] = (int8_t) (grid(i, j) + 128);
+				// printf("%d\t", im->buf[i * im->stride + j]);
+			}
+			// printf("\n");
+		}
+
+		auto beginItr = msg->path.begin();
+		auto endItr = msg->path.end();
+		if (path.size() == 0 && msg->path.size() != 0) {
+			// if first point in path, push it on
+			path.push_back(*beginItr++);
+			path.push_back(*beginItr++);
+			path.push_back(0.0f);
+		}
+		for (auto i = beginItr; i != endItr; ) {
+			// push two points per point to form solid line
+			float x = *beginItr++;
+			float y = *beginItr++;
+			path.push_back(x);
+			path.push_back(y);
+			path.push_back(0.0f);
+
+			path.push_back(x);
+			path.push_back(y);
+			path.push_back(0.0f);
+		}
+
+		lidar_rays.clear();
+		const std::vector<float>& x_points = msg->lidar_paths[0];
+		const std::vector<float>& y_points = msg->lidar_paths[1];
+		for (unsigned int i = 0; i < msg->lidar_thetas.size(); ++i) {
+			lidar_rays.push_back(x_points[i]);
+			lidar_rays.push_back(y_points[i]);
+			lidar_rays.push_back(0);
+
+			float x_end = x_points[i] + msg->lidar_ranges[i] 
+				* cos(msg->lidar_thetas[i]);
+			float y_end = y_points[i] + msg->lidar_ranges[i] 
+				* sin(msg->lidar_thetas[i]);
+			lidar_rays.push_back(x_end);
+			lidar_rays.push_back(y_end);
+			lidar_rays.push_back(0);
+		}
+
+		pthread_mutex_unlock(&renderMutex);
+	}
+
+	void launchThreads() {
+		// lcm handle thread
+		pthread_create(&lcm_pid, NULL, &StateHandler::lcmHandleThread, this);
+
+		// render thread
+		pthread_create(&render_pid, NULL, &StateHandler::renderThread, this);
+	}
+
+private:
+	static void display_finished(vx_application_t * app, vx_display_t * disp) {
+		StateHandler * state = (StateHandler *) app->impl;
+		pthread_mutex_lock(&state->vxmutex);
+
+		vx_layer_t * layer = NULL;
+
+		// store a reference to the world and layer that we associate with each vx_display_t
+		zhash_remove(state->vxlayers, &disp, NULL, &layer);
+
+		vx_layer_destroy(layer);
+
+		pthread_mutex_unlock(&state->vxmutex);
+	}
+
+	static void display_started(vx_application_t * app, vx_display_t * disp) {
+		StateHandler * state = (StateHandler *) app->impl;
+
+		vx_layer_t* layer = vx_layer_create(state->vxworld);
+		vx_layer_set_display(layer, disp);
+
+		pthread_mutex_lock(&state->vxmutex);
+		// store a reference to the world and layer that we associate with each vx_display_t
+		zhash_put(state->vxlayers, &disp, &layer, NULL, NULL);
+		pthread_mutex_unlock(&state->vxmutex);
+	}
+
+	static void* lcmHandleThread(void* arg) {
+		StateHandler* state = (StateHandler*) arg;
+
+		while(1) {
+			state->lcm.handle();
+		}
+		return NULL;
+	}
+
+	static void* renderThread(void* arg) {
+		StateHandler* state = (StateHandler*) arg;
+
+		while (1) {
+			pthread_mutex_lock(&state->renderMutex);
+			
+			if (state->im != nullptr) {
+				vx_object_t* vim = vxo_image_from_u8(state->im, VXO_IMAGE_FLIPY,
+					VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+				// resize image into meters
+				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
+			}
+
+			if (state->path.size() != 0) {
+				int vec_size = state->path.size();
+				vx_resc_t* verts = vx_resc_copyf((state->path).data(), vec_size);
+				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
+					vxo_lines(verts, vec_size / 3, GL_LINES, vxo_lines_style(vx_red, 2.0f)));
+			}
+
+			if (state->lidar_rays.size() != 0) {
+				int vec_size = state->lidar_rays.size();
+				vx_resc_t* verts = vx_resc_copyf((state->lidar_rays).data(), vec_size);
+				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
+					vxo_lines(verts, vec_size / 3, GL_LINES,
+						vxo_lines_style(vx_red, 2.0f)));
+			}
+
+			pthread_mutex_unlock(&state->renderMutex);
+			
+			vx_buffer_swap(vx_world_get_buffer(state->vxworld, "state"));
+
+			usleep(10000);
+		}
+		return NULL;
+	}
+};
+
+StateHandler state;
+
+
+int main(int argc, char* argv[]) {
+	gdk_threads_init();
+	gdk_threads_enter();
+	gtk_init(&argc, &argv);
+	state.appwrap = vx_gtk_display_source_create(&state.vxapp);
+	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	GtkWidget *canvas = vx_gtk_display_source_get_widget(state.appwrap);
+	gtk_window_set_default_size(GTK_WINDOW(window), 400, 400);
+	gtk_container_add(GTK_CONTAINER(window), canvas);
+	gtk_widget_show(canvas);
+	gtk_widget_show(window);
+
+	vx_global_init();
+
+	// eecs467::OccupancyGrid grid(1, 1, 0.05);
+	// for (int i = 0; i < 20; ++i) {
+	// 	grid.setLogOdds(i, 0, 127);
+	// 	grid.setLogOdds(0, i, -128);
+	// }
+
+	// maebot_occupancy_grid_t gridLCM = grid.toLCM();
+
+	// image_u8_t* im = image_u8_create(gridLCM.width, gridLCM.height);
+
+	// for (int i = 0; i < gridLCM.height; ++i){
+	// 	for (int j = 0; j < gridLCM.width; ++j) {
+	// 		im->buf[i * im->stride + j] = (int8_t) (grid(i, j) + 128);
+	// 		printf("%d\t", im->buf[i * im->stride + j]);
+	// 	}
+	// 	printf("\n");
+	// }
+
+	// vx_object_t* vim = vxo_image_from_u8(im, VXO_IMAGE_FLIPY,
+	// 	VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
+	// vx_buffer_add_back(vx_world_get_buffer(state.vxworld, "state"), vim);
+	// vx_buffer_swap(vx_world_get_buffer(state.vxworld, "state"));
+
+	state.launchThreads();
+
+	gtk_main();
+	gdk_threads_leave();
+
+	vx_global_destroy();
+}
+
