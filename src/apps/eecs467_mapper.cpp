@@ -2,6 +2,7 @@
 
 // c++
 #include <vector>
+#include <iostream>
 
 // lcm
 #include <lcm/lcm-cpp.hpp>
@@ -16,7 +17,8 @@ class StateHandler {
 public:
 	eecs467::OccupancyGrid grid;
 	float heading;
-	std::vector<float> path;
+	std::vector<float> path_x;
+	std::vector<float> path_y;
 	pthread_mutex_t dataMutex;
 
 	lcm::LCM lcm;
@@ -70,11 +72,14 @@ private:
 			maebot_map_data_t msg;
 			msg.utime = 0; // not used right now
 			msg.grid = state->grid.toLCM();
-			msg.path_num = state->path.size();
-			msg.path.clear();
-			msg.path = state->path;
-			pthread_mutex_unlock(&state->dataMutex);
+			msg.path_num = state->path_x.size();
+			msg.path_x = state->path_x;
+			msg.path_y = state->path_y;
+			msg.lidar_num = 0;
 			state->lcm.publish("MAEBOT_MAP_DATA", &msg);
+			state->path_x.clear();
+			state->path_y.clear();
+			pthread_mutex_unlock(&state->dataMutex);
 			usleep(10000);
 		}
 
@@ -91,8 +96,25 @@ int main() {
 		state.grid.setLogOdds(i, 0, 127);
 		state.grid.setLogOdds(0, i, -128);
 	}
+	std::vector<float> x_points = { 0, 0, 1 };
+	std::vector<float> y_points = { 0, 1, 1 };
+	state.path_x.insert(state.path_x.end(), 
+		x_points.begin(), x_points.end());
+	state.path_y.insert(state.path_y.end(), 
+		y_points.begin(), y_points.end());
 	pthread_mutex_unlock(&state.dataMutex);
 
+	usleep(10000);
+
+	pthread_mutex_lock(&state.dataMutex);
+	std::vector<float> x_points2 = { 1, 2, 2 };
+	std::vector<float> y_points2 = { 1, 1, 2 };
+	state.path_x.insert(state.path_x.end(), 
+		x_points2.begin(), x_points2.end());
+	state.path_y.insert(state.path_y.end(), 
+		y_points2.begin(), y_points2.end());
+
+	pthread_mutex_unlock(&state.dataMutex);
 	while(1) {
 		state.lcm.handle();
 	}

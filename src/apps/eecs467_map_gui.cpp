@@ -113,38 +113,37 @@ public:
 			// printf("\n");
 		}
 
-		auto beginItr = msg->path.begin();
-		auto endItr = msg->path.end();
-		if (path.size() == 0 && msg->path.size() != 0) {
-			// if first point in path, push it on
-			path.push_back(*beginItr++);
-			path.push_back(*beginItr++);
+		unsigned int i = 0;
+		const std::vector<float>& x_path_points = msg->path_x;
+		const std::vector<float>& y_path_points = msg->path_y;
+		if (path.size() == 0 && msg->path_x.size() != 0) {
+			path.push_back(x_path_points[i]);
+			path.push_back(y_path_points[i]);
 			path.push_back(0.0f);
+			i++;
 		}
-		for (auto i = beginItr; i != endItr; ) {
-			// push two points per point to form solid line
-			float x = *beginItr++;
-			float y = *beginItr++;
-			path.push_back(x);
-			path.push_back(y);
+
+		for ( ; i < x_path_points.size(); ++i) {
+			path.push_back(x_path_points[i]);
+			path.push_back(y_path_points[i]);
 			path.push_back(0.0f);
 
-			path.push_back(x);
-			path.push_back(y);
+			path.push_back(x_path_points[i]);
+			path.push_back(y_path_points[i]);
 			path.push_back(0.0f);
 		}
 
 		lidar_rays.clear();
-		const std::vector<float>& x_points = msg->lidar_paths[0];
-		const std::vector<float>& y_points = msg->lidar_paths[1];
+		const std::vector<float>& x_lidar_points = msg->lidar_path_x;
+		const std::vector<float>& y_lidar_points = msg->lidar_path_y;
 		for (unsigned int i = 0; i < msg->lidar_thetas.size(); ++i) {
-			lidar_rays.push_back(x_points[i]);
-			lidar_rays.push_back(y_points[i]);
+			lidar_rays.push_back(x_lidar_points[i]);
+			lidar_rays.push_back(y_lidar_points[i]);
 			lidar_rays.push_back(0);
 
-			float x_end = x_points[i] + msg->lidar_ranges[i] 
+			float x_end = x_lidar_points[i] + msg->lidar_ranges[i] 
 				* cos(msg->lidar_thetas[i]);
-			float y_end = y_points[i] + msg->lidar_ranges[i] 
+			float y_end = y_lidar_points[i] + msg->lidar_ranges[i] 
 				* sin(msg->lidar_thetas[i]);
 			lidar_rays.push_back(x_end);
 			lidar_rays.push_back(y_end);
@@ -205,9 +204,11 @@ private:
 			pthread_mutex_lock(&state->renderMutex);
 			
 			if (state->im != nullptr) {
-				vx_object_t* vim = vxo_image_from_u8(state->im, VXO_IMAGE_FLIPY,
-					VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
-				// resize image into meters
+				// resize image from cells to meters
+				vx_object_t* vim = vxo_chain(
+					vxo_mat_scale((double)state->grid.metersPerCell()),
+					vxo_image_from_u8(state->im, VXO_IMAGE_FLIPY,
+					VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER));
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
 			}
 
