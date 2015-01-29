@@ -1,7 +1,8 @@
 #include "LaserCorrector.hpp"
 #include "RobotConstants.hpp"
 
-eecs467::LaserCorrector::LaserCorrector() {
+eecs467::LaserCorrector::LaserCorrector() :
+	_utime(0) {
 	_scansToProcess.reserve(maxNumLasersPerScan + 100);
 	_processedScans.reserve(maxNumLasersPerScan + 100);
 }
@@ -12,6 +13,8 @@ bool eecs467::LaserCorrector::pushNewScans(const maebot_laser_scan_t& scan) {
 		exit(1);
 		return false;
 	}
+
+	_utime = scan.utime;
 
 	// push scanned lasers in backwards (so they can be popped out with pop_back)
 	for (int32_t i = scan.num_ranges - 1; i >= 0; --i) {
@@ -41,7 +44,7 @@ bool eecs467::LaserCorrector::process() {
 
 	while (!_scansToProcess.empty()) {
 		maebot_pose_t oldest;
-		while(_poses.size() && _poses.front().utime < _scansToProcess.back().utime){
+		while(!_poses.empty() && _poses.front().utime < _scansToProcess.back().utime){
 			oldest = _poses.front();
 			_poses.pop_front();
 		}
@@ -75,5 +78,27 @@ bool eecs467::LaserCorrector::process() {
 }
 
 bool eecs467::LaserCorrector::createCorrectedLcmMsg(maebot_processed_laser_scan_t& msg) {
-	// msg.
+	if (_processedScans.empty() || !_scansToProcess.empty()) {
+		return false;
+	}
+
+	msg.utime = _utime;
+	msg.num_ranges = _processedScans.size();
+	
+	msg.ranges.clear();
+	msg.thetas.clear();
+	msg.times.clear();
+	msg.intensities.clear();
+	msg.x_pos.clear();
+	msg.y_pos.clear();
+
+	for (auto& scan : _processedScans) {
+		msg.ranges.push_back(scan.range);
+		msg.thetas.push_back(scan.theta);
+		msg.times.push_back(scan.utime);
+		msg.intensities.push_back(scan.intensity);
+		msg.x_pos.push_back(scan.posX);
+		msg.y_pos.push_back(scan.posY);
+	}
+	return true;
 }

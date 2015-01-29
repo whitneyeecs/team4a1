@@ -24,6 +24,7 @@ private:
 		float posY;
 	};
 
+	int64_t _utime;
 	std::vector<SingleLaser> _scansToProcess;
 	std::vector<SingleLaser> _processedScans;
 
@@ -56,6 +57,7 @@ public:
 	/**
 	 * @brief fills an lcm msg with corrected scans
 	 * @details will only work if all scans have been processed
+	 * this will also clean out internal memory that saved the processed scans
 	 * @param msg msg to fill
 	 * @return returns true if msg was succesfully filled
 	 */
