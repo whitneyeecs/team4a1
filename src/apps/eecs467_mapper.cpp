@@ -48,7 +48,7 @@ public:
 	}
 
 	void launchThreads() {
-		pthread_create(&publish_map_data_pid, NULL, &StateHandler::publishMapDataThread, this);
+		pthread_create(&publish_map_data_pid, NULL, &StateHandler::processMapDataThread, this);
 	}
 
 private:
@@ -57,16 +57,10 @@ private:
 	void handleLaserMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_laser_scan_t* msg) {
-		
+	
+		pthread_mutex_lock(&dataMutex);
 		laser.pushNewScans(*msg);
-		if(!laser.process()){
-			printf("laser process failed\n");
-			exit(1);
-		}
-		maebot_processed_laser_scan_t message;
-		laser.createCorrectedLcmMsg(message);
-		lcm.publish("MAEBOT_PROCESSED_LASER_SCAN", &message);
-
+		pthread_mutex_unlock(&dataMutex);
 	}
 
 	void handleMotorFeedbackMessage(const lcm::ReceiveBuffer* rbuf,
@@ -78,15 +72,29 @@ private:
 	void handlePoseMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_pose_t* msg) {
+		pthread_mutex_lock(&dataMutex);
 		
 		laser.pushNewPose(*msg);
+		path_x.push_back(msg->x);
+		path_y.push_back(msg->y);
+		heading = msg->theta;
+		pthread_mutex_unlock(&dataMutex);
 	}
 
-	static void* publishMapDataThread(void* arg) {
+	static void* processMapDataThread(void* arg) {
 		StateHandler* state = (StateHandler*) arg;
 		while (1) {
 			pthread_mutex_lock(&state->dataMutex);
+printf("while loop\n");
+			if(!laser.process()){
+				printf("laser process failed\n");
+				continue;
+			}
+			maebot_processed_laser_scan_t message;
+			laser.createCorrectedLcmMsg(message);
+			
 			maebot_map_data_t msg;
+			msg.scan = message;
 			msg.utime = 0; // not used right now
 			msg.grid = state->grid.toLCM();
 			msg.path_num = state->path_x.size();
@@ -100,39 +108,13 @@ private:
 		}
 
 		return NULL;
-	}
+	} 
 };
 
 int main() {
 	StateHandler state;
 	state.launchThreads();
 
-	// test data 
-	pthread_mutex_lock(&state.dataMutex);
-	for (unsigned int i = 0; i < state.grid.widthInCells(); ++i) {
-		state.grid.setLogOdds(i, 0, 127);
-		state.grid.setLogOdds(0, i, -128);
-	}
-	std::vector<float> x_points = { 0, 0, 1 };
-	std::vector<float> y_points = { 0, 1, 1 };
-	state.path_x.insert(state.path_x.end(), 
-		x_points.begin(), x_points.end());
-	state.path_y.insert(state.path_y.end(), 
-		y_points.begin(), y_points.end());
-	pthread_mutex_unlock(&state.dataMutex);
-
-	usleep(10000);
-
-	pthread_mutex_lock(&state.dataMutex);
-	std::vector<float> x_points2 = { 1, 2, 2 };
-	std::vector<float> y_points2 = { 1, 1, 2 };
-	state.path_x.insert(state.path_x.end(), 
-		x_points2.begin(), x_points2.end());
-	state.path_y.insert(state.path_y.end(), 
-		y_points2.begin(), y_points2.end());
-
-
-	pthread_mutex_unlock(&state.dataMutex);
 	while(1) {
 		state.lcm.handle();
 	}
