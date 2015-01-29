@@ -10,6 +10,7 @@
 
 // c++
 #include <vector>
+#include "a1/StateEstimator.hpp"
 
 // lcm
 #include <lcm/lcm-cpp.hpp>
@@ -251,31 +252,9 @@ int main(int argc, char* argv[]) {
 	gtk_container_add(GTK_CONTAINER(window), canvas);
 	gtk_widget_show(canvas);
 	gtk_widget_show(window);
+	eecs467::StateEstimator blah = eecs467::StateEstimator(1, 2, 1);
 
 	vx_global_init();
-
-	// eecs467::OccupancyGrid grid(1, 1, 0.05);
-	// for (int i = 0; i < 20; ++i) {
-	// 	grid.setLogOdds(i, 0, 127);
-	// 	grid.setLogOdds(0, i, -128);
-	// }
-
-	// maebot_occupancy_grid_t gridLCM = grid.toLCM();
-
-	// image_u8_t* im = image_u8_create(gridLCM.width, gridLCM.height);
-
-	// for (int i = 0; i < gridLCM.height; ++i){
-	// 	for (int j = 0; j < gridLCM.width; ++j) {
-	// 		im->buf[i * im->stride + j] = (int8_t) (grid(i, j) + 128);
-	// 		printf("%d\t", im->buf[i * im->stride + j]);
-	// 	}
-	// 	printf("\n");
-	// }
-
-	// vx_object_t* vim = vxo_image_from_u8(im, VXO_IMAGE_FLIPY,
-	// 	VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER);
-	// vx_buffer_add_back(vx_world_get_buffer(state.vxworld, "state"), vim);
-	// vx_buffer_swap(vx_world_get_buffer(state.vxworld, "state"));
 
 	state.launchThreads();
 

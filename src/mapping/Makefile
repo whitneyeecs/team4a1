@@ -16,4 +16,4 @@ $(LIB_MAPPING): $(LIBMAPPING_OBJS) $(LIBDEPS)
 
 clean:
 	@rm -f *.o *~ *.a
-	@rm -f $(LIB_COMMON)
+	@rm -f $(LIB_MAPPING)

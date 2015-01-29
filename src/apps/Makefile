@@ -7,6 +7,7 @@ CFLAGS = $(CFLAGS_STD) \
 	$(CFLAGS_MATH) \
 	$(CFLAGS_COMMON) \
 	$(CFLAGS_LCMTYPES) \
+	$(CFLAGS_A1) \
 	-O2
 
 LDFLAGS = $(LDFLAGS_STD) \
@@ -15,7 +16,8 @@ LDFLAGS = $(LDFLAGS_STD) \
 	$(LDFLAGS_MATH) \
 	$(LDFLAGS_COMMON) \
 	$(LDFLAGS_LCMTYPES) \
-	$(LDFLAGS_MAPPING) 
+	$(LDFLAGS_MAPPING) \
+	$(LDFLAGS_A1)
 
 CXXFLAGS = $(CXXFLAGS_STD) \
 	$(CFLAGS_VX_GTK) \
@@ -23,6 +25,7 @@ CXXFLAGS = $(CXXFLAGS_STD) \
 	$(CFLAGS_MATH) \
 	$(CFLAGS_COMMON) \
 	$(CFLAGS_LCMTYPES) \
+	$(CFLAGS_A1) \
 	-O2
 
 LIBDEPS = $(call libdeps, $(LDFLAGS))
@@ -63,11 +66,11 @@ $(BIN_EECS467_MAEBOT_VIDEO_TELOP): maebot_video_teleop.o $(LIBDEPS)
 	@echo "\t$@"
 	@$(CC) -o $@ $^ $(LDFLAGS)
 
-$(BIN_EECS467_MAP_GUI): eecs467_map_gui.o $(LIB_EECS467) $(LIBDEPS)
+$(BIN_EECS467_MAP_GUI): eecs467_map_gui.o $(LIBDEPS)
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 
-$(BIN_EECS467_MAPPER): eecs467_mapper.o
+$(BIN_EECS467_MAPPER): eecs467_mapper.o $(LIBDEPS)
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 

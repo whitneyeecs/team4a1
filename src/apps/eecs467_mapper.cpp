@@ -91,6 +91,7 @@ int main() {
 	StateHandler state;
 	state.launchThreads();
 
+	// test data 
 	pthread_mutex_lock(&state.dataMutex);
 	for (unsigned int i = 0; i < state.grid.widthInCells(); ++i) {
 		state.grid.setLogOdds(i, 0, 127);
