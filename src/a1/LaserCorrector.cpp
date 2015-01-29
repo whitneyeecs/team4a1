@@ -1,5 +1,6 @@
 #include "LaserCorrector.hpp"
 #include "RobotConstants.hpp"
+#include "math/angle_functions.hpp"
 
 eecs467::LaserCorrector::LaserCorrector() :
 	_utime(0) {
@@ -63,7 +64,7 @@ bool eecs467::LaserCorrector::process() {
 
 		SingleLaser newLaser = {
 			laser.range,
-			poseTheta + laserThetaToMaebotTheta(laser.theta),
+			wrap_to_pi(poseTheta + laserThetaToMaebotTheta(laser.theta)),
 			laser.utime,
 			laser.intensity,
 			poseX,

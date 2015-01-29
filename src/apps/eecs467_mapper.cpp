@@ -14,6 +14,10 @@
 #include <lcmtypes/maebot_map_data_t.hpp>
 #include "mapping/occupancy_grid.hpp"
 
+#include "a1/LaserCorrector.hpp"
+
+eecs467::LaserCorrector laser;
+
 class StateHandler {
 public:
 	eecs467::OccupancyGrid grid;
@@ -48,16 +52,20 @@ public:
 	}
 
 private:
+
+
 	void handleLaserMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_laser_scan_t* msg) {
-		printf("utime: %ld\n", msg->utime);
-		for (int i = 0; i < msg->num_ranges; i++) {
-			if (msg->intensities[i] != 0)
-				printf("%ld,\t%f,\t%f\n", msg->times[i], msg->thetas[i], msg->ranges[i]);
+		
+		laser.pushNewScans(*msg);
+		if(!laser.process()){
+			printf("laser process failed\n");
+			exit(1);
 		}
-		printf("diff in time: %ld\n", msg->times[msg->num_ranges - 1] - msg->times[0]);
-		exit(1);
+		maebot_processed_laser_scan_t message;
+		laser.createCorrectedLcmMsg(message);
+		lcm.publish("MAEBOT_PROCESSED_LASER_SCAN", &message);
 
 	}
 
@@ -70,7 +78,8 @@ private:
 	void handlePoseMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_pose_t* msg) {
-
+		
+		laser.pushNewPose(*msg);
 	}
 
 	static void* publishMapDataThread(void* arg) {
