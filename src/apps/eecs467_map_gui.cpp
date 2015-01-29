@@ -201,7 +201,10 @@ private:
 			
 			if (state->im != nullptr) {
 				// resize image from cells to meters
+				// then center it
+				eecs467::Point<float> origin = state->grid.originInGlobalFrame();
 				vx_object_t* vim = vxo_chain(
+					vxo_mat_translate3(origin.x, origin.y, 0),
 					vxo_mat_scale((double)state->grid.metersPerCell()),
 					vxo_image_from_u8(state->im, VXO_IMAGE_FLIPY,
 					VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER));

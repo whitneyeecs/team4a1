@@ -83,7 +83,6 @@ private:
 			msg.path_num = state->path_x.size();
 			msg.path_x = state->path_x;
 			msg.path_y = state->path_y;
-			msg.lidar_num = 0;
 			state->lcm.publish("MAEBOT_MAP_DATA", &msg);
 			state->path_x.clear();
 			state->path_y.clear();
@@ -100,28 +99,28 @@ int main() {
 	state.launchThreads();
 
 	// test data 
-	// pthread_mutex_lock(&state.dataMutex);
-	// for (unsigned int i = 0; i < state.grid.widthInCells(); ++i) {
-	// 	state.grid.setLogOdds(i, 0, 127);
-	// 	state.grid.setLogOdds(0, i, -128);
-	// }
-	// std::vector<float> x_points = { 0, 0, 1 };
-	// std::vector<float> y_points = { 0, 1, 1 };
-	// state.path_x.insert(state.path_x.end(), 
-	// 	x_points.begin(), x_points.end());
-	// state.path_y.insert(state.path_y.end(), 
-	// 	y_points.begin(), y_points.end());
-	// pthread_mutex_unlock(&state.dataMutex);
+	pthread_mutex_lock(&state.dataMutex);
+	for (unsigned int i = 0; i < state.grid.widthInCells(); ++i) {
+		state.grid.setLogOdds(i, 0, 127);
+		state.grid.setLogOdds(0, i, -128);
+	}
+	std::vector<float> x_points = { 0, 0, 1 };
+	std::vector<float> y_points = { 0, 1, 1 };
+	state.path_x.insert(state.path_x.end(), 
+		x_points.begin(), x_points.end());
+	state.path_y.insert(state.path_y.end(), 
+		y_points.begin(), y_points.end());
+	pthread_mutex_unlock(&state.dataMutex);
 
-	// usleep(10000);
+	usleep(10000);
 
-	// pthread_mutex_lock(&state.dataMutex);
-	// std::vector<float> x_points2 = { 1, 2, 2 };
-	// std::vector<float> y_points2 = { 1, 1, 2 };
-	// state.path_x.insert(state.path_x.end(), 
-	// 	x_points2.begin(), x_points2.end());
-	// state.path_y.insert(state.path_y.end(), 
-	// 	y_points2.begin(), y_points2.end());
+	pthread_mutex_lock(&state.dataMutex);
+	std::vector<float> x_points2 = { 1, 2, 2 };
+	std::vector<float> y_points2 = { 1, 1, 2 };
+	state.path_x.insert(state.path_x.end(), 
+		x_points2.begin(), x_points2.end());
+	state.path_y.insert(state.path_y.end(), 
+		y_points2.begin(), y_points2.end());
 
 
 	pthread_mutex_unlock(&state.dataMutex);
