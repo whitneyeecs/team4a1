@@ -109,9 +109,7 @@ public:
 		for (unsigned int i = 0; i < grid.heightInCells(); ++i){
 			for (unsigned int j = 0; j < grid.widthInCells(); ++j) {
 				im->buf[i * im->stride + j] = (int8_t) (grid(i, j) + 128);
-				// printf("%d\t", im->buf[i * im->stride + j]);
 			}
-			// printf("\n");
 		}
 
 		unsigned int i = 0;
