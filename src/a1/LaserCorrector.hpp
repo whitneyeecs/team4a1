@@ -18,8 +18,10 @@ private:
 	struct SingleLaser {
 		float range;
 		float theta;
-		int64_t time;
+		int64_t utime;
 		float intensity;
+		float posX;
+		float posY;
 	};
 
 	std::vector<SingleLaser> _scansToProcess;
@@ -37,7 +39,7 @@ public:
 	 * @return true if there are no other scans in process
 	 * false if there are (and it will drop the scan)
 	 */
-	bool processNewScans(const maebot_laser_scan_t& scan);
+	bool pushNewScans(const maebot_laser_scan_t& scan);
 
 	/**
 	 * @brief pushes a new pose onto the queue
