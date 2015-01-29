@@ -2,13 +2,14 @@
 
 // c++
 #include <vector>
+#include <list>
 #include <iostream>
 
 // lcm
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/maebot_occupancy_grid_t.hpp>
 #include <lcmtypes/maebot_motor_feedback_t.hpp>
-#include <lcmtypes/maebot_laser_t.hpp>
+#include <lcmtypes/maebot_laser_scan_t.hpp>
 #include <lcmtypes/maebot_pose_t.hpp>
 #include <lcmtypes/maebot_map_data_t.hpp>
 #include "mapping/occupancy_grid.hpp"
@@ -49,7 +50,14 @@ public:
 private:
 	void handleLaserMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
-		const maebot_laser_t* msg) {
+		const maebot_laser_scan_t* msg) {
+		printf("utime: %ld\n", msg->utime);
+		for (int i = 0; i < msg->num_ranges; i++) {
+			if (msg->intensities[i] != 0)
+				printf("%ld,\t%f,\t%f\n", msg->times[i], msg->thetas[i], msg->ranges[i]);
+		}
+		printf("diff in time: %ld\n", msg->times[msg->num_ranges - 1] - msg->times[0]);
+		exit(1);
 
 	}
 
@@ -92,28 +100,29 @@ int main() {
 	state.launchThreads();
 
 	// test data 
-	pthread_mutex_lock(&state.dataMutex);
-	for (unsigned int i = 0; i < state.grid.widthInCells(); ++i) {
-		state.grid.setLogOdds(i, 0, 127);
-		state.grid.setLogOdds(0, i, -128);
-	}
-	std::vector<float> x_points = { 0, 0, 1 };
-	std::vector<float> y_points = { 0, 1, 1 };
-	state.path_x.insert(state.path_x.end(), 
-		x_points.begin(), x_points.end());
-	state.path_y.insert(state.path_y.end(), 
-		y_points.begin(), y_points.end());
-	pthread_mutex_unlock(&state.dataMutex);
+	// pthread_mutex_lock(&state.dataMutex);
+	// for (unsigned int i = 0; i < state.grid.widthInCells(); ++i) {
+	// 	state.grid.setLogOdds(i, 0, 127);
+	// 	state.grid.setLogOdds(0, i, -128);
+	// }
+	// std::vector<float> x_points = { 0, 0, 1 };
+	// std::vector<float> y_points = { 0, 1, 1 };
+	// state.path_x.insert(state.path_x.end(), 
+	// 	x_points.begin(), x_points.end());
+	// state.path_y.insert(state.path_y.end(), 
+	// 	y_points.begin(), y_points.end());
+	// pthread_mutex_unlock(&state.dataMutex);
 
-	usleep(10000);
+	// usleep(10000);
 
-	pthread_mutex_lock(&state.dataMutex);
-	std::vector<float> x_points2 = { 1, 2, 2 };
-	std::vector<float> y_points2 = { 1, 1, 2 };
-	state.path_x.insert(state.path_x.end(), 
-		x_points2.begin(), x_points2.end());
-	state.path_y.insert(state.path_y.end(), 
-		y_points2.begin(), y_points2.end());
+	// pthread_mutex_lock(&state.dataMutex);
+	// std::vector<float> x_points2 = { 1, 2, 2 };
+	// std::vector<float> y_points2 = { 1, 1, 2 };
+	// state.path_x.insert(state.path_x.end(), 
+	// 	x_points2.begin(), x_points2.end());
+	// state.path_y.insert(state.path_y.end(), 
+	// 	y_points2.begin(), y_points2.end());
+
 
 	pthread_mutex_unlock(&state.dataMutex);
 	while(1) {

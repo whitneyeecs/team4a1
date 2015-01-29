@@ -1,0 +1,17 @@
+struct maebot_processed_laser_scan_t {
+	int64_t utime;
+
+	// Measured range in meters
+	// Measurement angle in radians
+	// Measurement time was taken in usec
+	// Measurement intensity -- unitless
+	// X position from where beam originated
+	// Y position from where beam originated
+	int32_t num_ranges;	
+	float   ranges[num_ranges];			// [m]
+	float   thetas[num_ranges];			// [rad]
+	int64_t times[num_ranges];			// [usec]
+	float   intensities[num_ranges];	// no units
+	float x_pos[num_ranges];			// [m]
+	float y_pos[num_ranges];			// [m]
+}
