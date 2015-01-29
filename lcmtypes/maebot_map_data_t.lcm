@@ -9,5 +9,5 @@ struct maebot_map_data_t
 	float path_x[path_num]; 
 	float path_y[path_num];
 
-	maebot_processed_laser_data_t scan;
+	maebot_processed_laser_scan_t scan;
 }

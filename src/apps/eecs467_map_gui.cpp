@@ -113,40 +113,37 @@ public:
 		}
 
 		unsigned int i = 0;
-		const std::vector<float>& x_path_points = msg->path_x;
-		const std::vector<float>& y_path_points = msg->path_y;
-		if (path.size() == 0 && msg->path_x.size() != 0) {
-			path.push_back(x_path_points[i]);
-			path.push_back(y_path_points[i]);
+		if (path.size() == 0 && msg->path_num != 0) {
+			path.push_back(msg->path_x[i]);
+			path.push_back(msg->path_y[i]);
 			path.push_back(0.0f);
 			i++;
 		}
 
-		for ( ; i < x_path_points.size(); ++i) {
-			path.push_back(x_path_points[i]);
-			path.push_back(y_path_points[i]);
+		for ( ; i < msg->path_x.size(); ++i) {
+			path.push_back(msg->path_x[i]);
+			path.push_back(msg->path_y[i]);
 			path.push_back(0.0f);
 
-			path.push_back(x_path_points[i]);
-			path.push_back(y_path_points[i]);
+			path.push_back(msg->path_x[i]);
+			path.push_back(msg->path_y[i]);
 			path.push_back(0.0f);
 		}
 
+
 		lidar_rays.clear();
-		const std::vector<float>& x_lidar_points = msg->lidar_path_x;
-		const std::vector<float>& y_lidar_points = msg->lidar_path_y;
-		for (unsigned int i = 0; i < msg->lidar_thetas.size(); ++i) {
-			lidar_rays.push_back(x_lidar_points[i]);
-			lidar_rays.push_back(y_lidar_points[i]);
+		for (int i = 0; i < msg->scan.num_ranges; ++i) {
+			lidar_rays.push_back(msg->scan.x_pos[i]);
+			lidar_rays.push_back(msg->scan.y_pos[i]);
 			lidar_rays.push_back(0);
 
-			float x_end = x_lidar_points[i] + msg->lidar_ranges[i] 
-				* cos(msg->lidar_thetas[i]);
-			float y_end = y_lidar_points[i] + msg->lidar_ranges[i] 
-				* sin(msg->lidar_thetas[i]);
+			float x_end = msg->scan.x_pos[i] + 
+				msg->scan.ranges[i] * cos(msg->scan.thetas[i]);
+			float y_end = msg->scan.y_pos[i] + 
+				msg->scan.ranges[i] * sin(msg->scan.thetas[i]);
 			lidar_rays.push_back(x_end);
 			lidar_rays.push_back(y_end);
-			lidar_rays.push_back(0);
+			lidar_rays.push_back(0);	
 		}
 
 		pthread_mutex_unlock(&renderMutex);
@@ -250,7 +247,6 @@ int main(int argc, char* argv[]) {
 	gtk_container_add(GTK_CONTAINER(window), canvas);
 	gtk_widget_show(canvas);
 	gtk_widget_show(window);
-	eecs467::StateEstimator blah = eecs467::StateEstimator(1, 2, 1);
 
 	vx_global_init();
 
