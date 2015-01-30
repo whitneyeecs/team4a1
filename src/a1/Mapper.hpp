@@ -9,14 +9,16 @@ namespace eecs467 {
 
 class Mapper {
 private:
-	OccupancyGrid _grid;
+	eecs467::OccupancyGrid _grid;
 	float _separationSize; // size between sampling on scan lines
 
 public:
-	Mapper(float separationSize, float widthInMeters = 5, 
+	Mapper(float separationSize = 1, float widthInMeters = 5, 
 		float heightInMeters = 5, float metersPerCell = 0.05);
 
 	void update(const maebot_processed_laser_scan_t& scan);
+
+	const eecs467::OccupancyGrid& getGrid() const;
 };
 
 }

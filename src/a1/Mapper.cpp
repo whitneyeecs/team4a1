@@ -2,7 +2,7 @@
 #include "math/point.hpp"
 #include <cmath>
 
-eecs467::Mapper::Mapper(float separationSize = 1, float widthInMeters, 
+eecs467::Mapper::Mapper(float separationSize, float widthInMeters, 
 	float heightInMeters, float metersPerCell) :
 	_grid(widthInMeters, heightInMeters, metersPerCell),
 	_separationSize(separationSize) { }
@@ -35,4 +35,8 @@ void eecs467::Mapper::update(const maebot_processed_laser_scan_t& scan) {
 			_grid(cellPos.x, cellPos.y) += 1;
 		}
 	}
+}
+
+const eecs467::OccupancyGrid& eecs467::Mapper::getGrid() const {
+	return _grid;
 }

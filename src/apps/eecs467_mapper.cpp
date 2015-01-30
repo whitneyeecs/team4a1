@@ -15,12 +15,13 @@
 #include "mapping/occupancy_grid.hpp"
 
 #include "a1/LaserCorrector.hpp"
+#include "a1/Mapper.hpp"
 
 eecs467::LaserCorrector laser;
 
 class StateHandler {
 public:
-	eecs467::OccupancyGrid grid;
+	eecs467::Mapper mapper;
 	float heading;
 	std::vector<float> path_x;
 	std::vector<float> path_y;
@@ -31,7 +32,7 @@ public:
 	pthread_t publish_map_data_pid;
 
 public:
-	StateHandler() : grid(5, 5, 0.05) {
+	StateHandler() : mapper(1, 5, 5, 0.05) {
 		if (!lcm.good()) {
 			printf("lcm unable to initialize\n");
 			exit(1);
@@ -91,12 +92,13 @@ private:
 				pthread_mutex_unlock(&state->dataMutex);
 				continue;
 			}
+			state->mapper.update(message);
 			printf("processed!\n");
 			
 			maebot_map_data_t msg;
 			msg.scan = message;
 			msg.utime = 0; // not used right now
-			msg.grid = state->grid.toLCM();
+			msg.grid = state->mapper.getGrid().toLCM();
 			msg.path_num = state->path_x.size();
 			msg.path_x = state->path_x;
 			msg.path_y = state->path_y;

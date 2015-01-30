@@ -63,14 +63,16 @@ void eecs467::LaserCorrector::process() {
 	// process until scansToProcess is empty
 	while (!_scansToProcess.empty()) {
 		// the laser scan with the smallest timestamp still unprocessed
-		const SingleLaser& laser = _scansToProcess.front();
+		SingleLaser& laser = _scansToProcess.front();
+
+		// printf("%f\t%f\n", laser.range, laser.theta);
 
 		if (laser.range == -1) {
 			// read a separator
 			_currMsg++;
 
 			// pop separator
-			_scansToProcess.pop_back();
+			_scansToProcess.pop_front();
 			continue;
 		}
 
@@ -97,9 +99,12 @@ void eecs467::LaserCorrector::process() {
 		float poseY = oldest.y + scaling * (_poses.front().y - oldest.y);
 		float poseTheta = oldest.theta + scaling * (_poses.front().theta - oldest.theta);
 
+		printf("%f\n", wrap_to_2pi(poseTheta +
+			laserThetaToMaebotTheta(laser.theta)));
+
 		// push processed scan into current message
 		_currMsg->ranges.push_back(laser.range);
-		_currMsg->thetas.push_back(wrap_to_pi(poseTheta +
+		_currMsg->thetas.push_back(wrap_to_2pi(poseTheta +
 			laserThetaToMaebotTheta(laser.theta)));
 		_currMsg->times.push_back(laser.utime);
 		_currMsg->intensities.push_back(laser.intensity);
@@ -110,7 +115,7 @@ void eecs467::LaserCorrector::process() {
 		_poses.push_front(oldest);
 
 		// pop recently processed scan
-		_scansToProcess.pop_back();
+		_scansToProcess.pop_front();
 	}
 	// processed one entire scan
 	_currMsg++;

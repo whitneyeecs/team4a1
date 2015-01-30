@@ -223,7 +223,7 @@ private:
 				vx_resc_t* verts = vx_resc_copyf((state->lidar_rays).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
 					vxo_lines(verts, vec_size / 3, GL_LINES,
-						vxo_lines_style(vx_red, 2.0f)));
+						vxo_lines_style(vx_green, 2.0f)));
 			}
 
 			pthread_mutex_unlock(&state->renderMutex);
