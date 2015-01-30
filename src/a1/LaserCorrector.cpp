@@ -99,12 +99,9 @@ void eecs467::LaserCorrector::process() {
 		float poseY = oldest.y + scaling * (_poses.front().y - oldest.y);
 		float poseTheta = oldest.theta + scaling * (_poses.front().theta - oldest.theta);
 
-		printf("%f\n", wrap_to_2pi(poseTheta +
-			laserThetaToMaebotTheta(laser.theta)));
-
 		// push processed scan into current message
 		_currMsg->ranges.push_back(laser.range);
-		_currMsg->thetas.push_back(wrap_to_2pi(poseTheta +
+		_currMsg->thetas.push_back(angle_sum(poseTheta,
 			laserThetaToMaebotTheta(laser.theta)));
 		_currMsg->times.push_back(laser.utime);
 		_currMsg->intensities.push_back(laser.intensity);
