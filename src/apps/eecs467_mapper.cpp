@@ -72,8 +72,8 @@ private:
 	void handlePoseMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_pose_t* msg) {
+
 		pthread_mutex_lock(&dataMutex);
-		
 		laser.pushNewPose(*msg);
 		path_x.push_back(msg->x);
 		path_y.push_back(msg->y);
@@ -85,11 +85,11 @@ private:
 		StateHandler* state = (StateHandler*) arg;
 		while (1) {
 			pthread_mutex_lock(&state->dataMutex);
-printf("while loop\n");
 			if(!laser.process()){
-				printf("laser process failed\n");
+				pthread_mutex_unlock(&state->dataMutex);
 				continue;
 			}
+			printf("processed\n");
 			maebot_processed_laser_scan_t message;
 			laser.createCorrectedLcmMsg(message);
 			
@@ -104,7 +104,7 @@ printf("while loop\n");
 			state->path_x.clear();
 			state->path_y.clear();
 			pthread_mutex_unlock(&state->dataMutex);
-			usleep(10000);
+			usleep(1000);
 		}
 
 		return NULL;

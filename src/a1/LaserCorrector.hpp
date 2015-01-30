@@ -46,7 +46,7 @@ public:
 	 * @brief pushes a new pose onto the queue
 	 * @param pose [description]
 	 */
-	void pushNewPose(maebot_pose_t pose);
+	void pushNewPose(const maebot_pose_t& pose);
 
 	/**
 	 * @brief tries to process as many laser ranges as possible

@@ -9,11 +9,17 @@ eecs467::LaserCorrector::LaserCorrector() :
 }
 
 bool eecs467::LaserCorrector::pushNewScans(const maebot_laser_scan_t& scan) {
+	// if scans haven't been processed or processed scans haven't been read out
 	if (_scansToProcess.size() != 0 || _processedScans.size() != 0) {
-		printf("IGNORED\n");
-		exit(1);
-		return false;
+		// printf("scans to process: %d\n", _scansToProcess.size());
+		// printf("processed scans: %d\n", _processedScans.size());
+		// printf("IGNORED\n");
+		// exit(1);
+		// return false;
+		// if a scan is already in flight push a separator in
+		SingleLaser laser = { -1, 0, 0, 0, 0, 0 };
 	}
+	printf("pushed scan: %ld\t%ld\n", scan.utime, scan.times[scan.num_ranges - 1]);
 
 	_utime = scan.utime;
 
@@ -29,33 +35,53 @@ bool eecs467::LaserCorrector::pushNewScans(const maebot_laser_scan_t& scan) {
 	return true;
 }
 
-void eecs467::LaserCorrector::pushNewPose(maebot_pose_t pose) {
+void eecs467::LaserCorrector::pushNewPose(const maebot_pose_t& pose) {
 	_poses.push_back(pose);
+	printf("pushed pose: %ld\n", pose.utime);
 }
 
 bool eecs467::LaserCorrector::process() {
-	//const SingleLaser& laser = _scansToProcess.back();
-	if(_poses.size()<2){
+	// if there are no scans to process return false
+	if (_scansToProcess.empty()) {
 		return false;
 	}
 
-	while (_poses.size() && _poses.front().utime > _scansToProcess.back().utime) {
-		_scansToProcess.pop_back();
+	// if the smallest pose time is greater than the smallest scan time
+	// then we have no pose before the scans to interpolate with
+	// throwout the set of scans
+	if (_poses.empty() || _poses.front().utime > _scansToProcess.back().utime) {
+		printf("first!\n");
+		_scansToProcess.clear();
+		_processedScans.clear();
+		return false;
 	}
 
+	// process until scansToProcess is empty
+	printf("ready to process\n");
 	while (!_scansToProcess.empty()) {
+		// the laser scan with the smallest timestamp still unprocessed
+		const SingleLaser& laser = _scansToProcess.back();
+
 		maebot_pose_t oldest;
-		while(!_poses.empty() && _poses.front().utime < _scansToProcess.back().utime){
+		// after this loop poses.front() should contain the first 
+		// pose that has a greater time stamp or will become empty
+		while(!_poses.empty() 
+			&& (_poses.front().utime < laser.utime)) {
 			oldest = _poses.front();
 			_poses.pop_front();
+			printf("oldest: %ld\t%d\n", oldest.utime, _poses.size());
 		}
 
+		// if all poses are used up, we will have to wait for more
+		// pop last one back on and return false
 		if (_poses.empty()) {
+			printf("empty!\n");
+			printf("laser time: %ld\n", laser.utime);
+			_poses.push_front(oldest);
 			return false;
 		}
 
-		const SingleLaser& laser = _scansToProcess.back();
-		// interpolate
+		// interpolate the position of the vehicle for the scan
 		float scaling = (laser.utime - oldest.utime) /
 			(_poses.front().utime - oldest.utime);
 		float poseX = oldest.x + scaling * (_poses.front().x - oldest.x);
@@ -73,6 +99,10 @@ bool eecs467::LaserCorrector::process() {
 		// push processed scan onto _processedScans
 		_processedScans.push_back(newLaser);
 
+		// pop the scan we just processed
+		_scansToProcess.pop_back();
+
+		// push older pose back on
 		_poses.push_front(oldest);
 	}
 	return true;
