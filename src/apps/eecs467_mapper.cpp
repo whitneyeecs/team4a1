@@ -66,7 +66,6 @@ private:
 	void handleMotorFeedbackMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_motor_feedback_t* msg) {
-
 	}
 
 	void handlePoseMessage(const lcm::ReceiveBuffer* rbuf,
@@ -84,14 +83,15 @@ private:
 	static void* processMapDataThread(void* arg) {
 		StateHandler* state = (StateHandler*) arg;
 		while (1) {
+			usleep(1000);
 			pthread_mutex_lock(&state->dataMutex);
-			if(!laser.process()){
+			laser.process();
+			maebot_processed_laser_scan_t message;
+			if (!laser.getCorrectedLcmMsg(message)) {
 				pthread_mutex_unlock(&state->dataMutex);
 				continue;
 			}
-			printf("processed\n");
-			maebot_processed_laser_scan_t message;
-			laser.createCorrectedLcmMsg(message);
+			printf("processed!\n");
 			
 			maebot_map_data_t msg;
 			msg.scan = message;
@@ -104,7 +104,6 @@ private:
 			state->path_x.clear();
 			state->path_y.clear();
 			pthread_mutex_unlock(&state->dataMutex);
-			usleep(1000);
 		}
 
 		return NULL;

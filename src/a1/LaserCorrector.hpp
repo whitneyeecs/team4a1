@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <list>
+#include <deque>
 
 #include <lcmtypes/maebot_laser_scan_t.hpp>
 #include <lcmtypes/maebot_pose_t.hpp>
@@ -24,9 +25,10 @@ private:
 		float posY;
 	};
 
-	int64_t _utime;
-	std::vector<SingleLaser> _scansToProcess;
-	std::vector<SingleLaser> _processedScans;
+	std::deque<SingleLaser> _scansToProcess;
+	// maebot_processed_laser_scan_t* _currMsg;
+	std::list<maebot_processed_laser_scan_t> _msgQueue;
+	std::list<maebot_processed_laser_scan_t>::iterator _currMsg;
 
 	std::list<maebot_pose_t> _poses;
 
@@ -50,9 +52,8 @@ public:
 
 	/**
 	 * @brief tries to process as many laser ranges as possible
-	 * @return returns true of all lasers are processed
 	 */
-	bool process();
+	void process();
 
 	/**
 	 * @brief fills an lcm msg with corrected scans
@@ -61,7 +62,11 @@ public:
 	 * @param msg msg to fill
 	 * @return returns true if msg was succesfully filled
 	 */
-	bool createCorrectedLcmMsg(maebot_processed_laser_scan_t& msg);
+	 bool getCorrectedLcmMsg(maebot_processed_laser_scan_t& msg);
+
+private:
+	static bool createLcmMsg(std::vector<SingleLaser> scan,
+		maebot_processed_laser_scan_t& msg);
 };
 
 }
