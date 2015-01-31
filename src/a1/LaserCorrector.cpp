@@ -91,6 +91,17 @@ void eecs467::LaserCorrector::process() {
 			_poses.push_front(oldest);
 			return;
 		}
+ 		
+ 		float delta_theta = _poses.front().theta - oldest.theta;
+ 		if (delta_theta > 2) {
+ 			// we are turning too fast or somethings gone wrong with the pose
+			_scansToProcess.clear();
+			_msgQueue.clear();
+			_currMsg = _msgQueue.end();
+			_poses.clear();
+ 			return;
+ 		}
+
 
 		// interpolate the position of the vehicle for the scan
 		float scaling = (float) (laser.utime - oldest.utime) /
@@ -126,10 +137,6 @@ bool eecs467::LaserCorrector::getCorrectedLcmMsg(maebot_processed_laser_scan_t& 
 	if (msg.num_ranges != msg.ranges.size()) {
 		return false;
 	}
-	// printf("msg\n");
-	// for (int i = 0; i < msg.num_ranges; ++i) {
-	// 	printf("%f\t%f\t%f\n", msg.x_pos[i], msg.y_pos[i], msg.theta);
-	// }
 	_msgQueue.pop_front();
 	return true;
 }

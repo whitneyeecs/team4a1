@@ -23,7 +23,6 @@ private:
 		float intensity;
 		float posX;
 		float posY;
-		float scale;
 	};
 
 	std::deque<SingleLaser> _scansToProcess;
@@ -64,10 +63,6 @@ public:
 	 * @return returns true if msg was succesfully filled
 	 */
 	 bool getCorrectedLcmMsg(maebot_processed_laser_scan_t& msg);
-
-private:
-	static bool createLcmMsg(std::vector<SingleLaser> scan,
-		maebot_processed_laser_scan_t& msg);
 };
 
 }
