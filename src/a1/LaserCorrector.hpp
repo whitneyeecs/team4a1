@@ -26,9 +26,7 @@ private:
 	};
 
 	std::deque<SingleLaser> _scansToProcess;
-	// maebot_processed_laser_scan_t* _currMsg;
-	std::list<maebot_processed_laser_scan_t> _msgQueue;
-	std::list<maebot_processed_laser_scan_t>::iterator _currMsg;
+	maebot_processed_laser_scan_t _processedScans;
 
 	std::list<maebot_pose_t> _poses;
 

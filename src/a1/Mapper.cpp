@@ -1,5 +1,6 @@
 #include "Mapper.hpp"
 #include "math/point.hpp"
+#include "SlamConstants.hpp"
 #include <cmath>
 
 eecs467::Mapper::Mapper(float separationSize, float widthInMeters, 
@@ -28,32 +29,31 @@ void eecs467::Mapper::update(const maebot_processed_laser_scan_t& scan) {
 		for (int i = 0; i < steps; ++i) {
 			cellPos = global_position_to_grid_cell(point, _grid);
 			// update empty cells
+			if (!_grid.isCellInGrid(cellPos.y, cellPos.x)) {
+				break;
+			}
 
-			if (_grid(cellPos.y, cellPos.x) < -126) {
+			if (_grid(cellPos.y, cellPos.x) < -128 + 
+				eecs467::emptyEvidenceStrength) {
 				_grid(cellPos.y, cellPos.x) = -128;
 			} else {
-				_grid(cellPos.y, cellPos.x) -= 2;
+				_grid(cellPos.y, cellPos.x) -= eecs467::emptyEvidenceStrength;
 			}
 			point.x += deltaX;
 			point.y += deltaY;
 		}
-		// if (cellPos.x != -1) {
-		// 	// update full cells
-		// 	if (_grid(cellPos.y, cellPos.x) > 115) {
-				
-		// 		_grid(cellPos.y, cellPos.x) = 127;
-		// 	} else {
-		// 		_grid(cellPos.y, cellPos.x) += 10;
-		// 	}
-		// 	printf("value: %d\n", _grid(cellPos.y, cellPos.x));
-		// }
+
 		point.x = scan.x_pos[i] + scan.ranges[i] * cos(scan.thetas[i]);
 		point.y = scan.y_pos[i] + scan.ranges[i] * sin(scan.thetas[i]);
 		cellPos = global_position_to_grid_cell(point, _grid);
-		if (_grid(cellPos.y, cellPos.x) > 126) {		
+		if (!_grid.isCellInGrid(cellPos.y, cellPos.x)) {
+			return;
+		}
+		if (_grid(cellPos.y, cellPos.x) > 127 - 
+			eecs467::occupiedEvidenceStrength) {		
 			_grid(cellPos.y, cellPos.x) = 127;
 		} else {
-			_grid(cellPos.y, cellPos.x) += 1;
+			_grid(cellPos.y, cellPos.x) += eecs467::occupiedEvidenceStrength;
 		}
 
 	}

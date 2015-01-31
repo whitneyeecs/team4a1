@@ -93,7 +93,6 @@ private:
 				continue;
 			}
 			state->mapper.update(message);
-			printf("processed!\n");
 			
 			maebot_map_data_t msg;
 			msg.scan = message;

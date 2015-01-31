@@ -2,34 +2,13 @@
 #include "RobotConstants.hpp"
 #include "math/angle_functions.hpp"
 
-eecs467::LaserCorrector::LaserCorrector() {
-	_currMsg = _msgQueue.end();
-}
+eecs467::LaserCorrector::LaserCorrector() { }
 
 bool eecs467::LaserCorrector::pushNewScans(const maebot_laser_scan_t& scan) {
-	// if scans haven't been processed or processed scans haven't been read out
-	if (_scansToProcess.size() != 0) {
-		printf("separator\n");
-		// push a separator value
-		SingleLaser laser = { -1, 0, 0, 0, 0, 0 };
-		_scansToProcess.push_back(laser);
-		// if we are not currently processing a message,
-		// set current message to the one we just created
-	}
-
-	printf("pushed scan: %ld\t%ld\n", scan.utime, scan.times[scan.num_ranges - 1]);
-	maebot_processed_laser_scan_t newScan;
-	newScan.utime = scan.utime;
-	newScan.num_ranges = scan.num_ranges;
-	_msgQueue.push_back(newScan);
-
-	if (_currMsg == _msgQueue.end()) {
-		_currMsg = _msgQueue.begin();
-	}
-
-	// push scanned lasers in backwards (so they can be popped out with pop_back)
+	// printf("pushed scan: %ld\t%ld\n", scan.utime, scan.times[scan.num_ranges - 1]);
 	for (int32_t i = 0; i < scan.num_ranges; ++i) {
-		SingleLaser laser = { scan.ranges[i], 
+		SingleLaser laser = { 
+			scan.ranges[i], 
 			scan.thetas[i],
 			scan.times[i],
 			scan.intensities[i], 0, 0 };
@@ -40,7 +19,7 @@ bool eecs467::LaserCorrector::pushNewScans(const maebot_laser_scan_t& scan) {
 
 void eecs467::LaserCorrector::pushNewPose(const maebot_pose_t& pose) {
 	_poses.push_back(pose);
-	printf("pushed pose: %ld\n", pose.utime);
+	// printf("pushed pose: %ld\n", pose.utime);
 }
 
 void eecs467::LaserCorrector::process() {
@@ -53,9 +32,7 @@ void eecs467::LaserCorrector::process() {
 	// then we have no pose before the scans to interpolate with
 	// throwout the set of scans
 	if (_poses.empty() || _poses.front().utime > _scansToProcess.back().utime) {
-		printf("first!\n");
-		_currMsg = _msgQueue.end();
-		_msgQueue.clear();
+		// printf("first!\n");
 		_scansToProcess.clear();
 		return;
 	}
@@ -64,17 +41,6 @@ void eecs467::LaserCorrector::process() {
 	while (!_scansToProcess.empty()) {
 		// the laser scan with the smallest timestamp still unprocessed
 		SingleLaser& laser = _scansToProcess.front();
-
-		// printf("%f\t%f\n", laser.range, laser.theta);
-
-		if (laser.range == -1) {
-			// read a separator
-			_currMsg++;
-
-			// pop separator
-			_scansToProcess.pop_front();
-			continue;
-		}
 
 		maebot_pose_t oldest;
 		// after this loop poses.front() should contain the first 
@@ -96,12 +62,9 @@ void eecs467::LaserCorrector::process() {
  		if (delta_theta > 2) {
  			// we are turning too fast or somethings gone wrong with the pose
 			_scansToProcess.clear();
-			_msgQueue.clear();
-			_currMsg = _msgQueue.end();
-			_poses.clear();
+			// _poses.clear();
  			return;
  		}
-
 
 		// interpolate the position of the vehicle for the scan
 		float scaling = (float) (laser.utime - oldest.utime) /
@@ -111,13 +74,13 @@ void eecs467::LaserCorrector::process() {
 		float poseTheta = oldest.theta + scaling * (_poses.front().theta - oldest.theta);
 
 		// push processed scan into current message
-		_currMsg->ranges.push_back(laser.range);
-		_currMsg->thetas.push_back(angle_sum(poseTheta,
+		_processedScans.ranges.push_back(laser.range);
+		_processedScans.thetas.push_back(angle_sum(poseTheta,
 			laserThetaToMaebotTheta(laser.theta)));
-		_currMsg->times.push_back(laser.utime);
-		_currMsg->intensities.push_back(laser.intensity);
-		_currMsg->x_pos.push_back(poseX);
-		_currMsg->y_pos.push_back(poseY);
+		_processedScans.times.push_back(laser.utime);
+		_processedScans.intensities.push_back(laser.intensity);
+		_processedScans.x_pos.push_back(poseX);
+		_processedScans.y_pos.push_back(poseY);
 
 		// push older pose back on
 		_poses.push_front(oldest);
@@ -125,18 +88,20 @@ void eecs467::LaserCorrector::process() {
 		// pop recently processed scan
 		_scansToProcess.pop_front();
 	}
-	// processed one entire scan
-	_currMsg++;
 }
 
 bool eecs467::LaserCorrector::getCorrectedLcmMsg(maebot_processed_laser_scan_t& msg) {
-	if (_msgQueue.empty()) {
+	if (_processedScans.ranges.empty()) {
 		return false;
 	}
-	msg = _msgQueue.front();
-	if (msg.num_ranges != msg.ranges.size()) {
-		return false;
-	}
-	_msgQueue.pop_front();
+	_processedScans.utime = _processedScans.times[0];
+	_processedScans.num_ranges = _processedScans.ranges.size();
+	msg = _processedScans;
+	_processedScans.ranges.clear();
+	_processedScans.thetas.clear();
+	_processedScans.times.clear();
+	_processedScans.intensities.clear();
+	_processedScans.x_pos.clear();
+	_processedScans.y_pos.clear();
 	return true;
 }
