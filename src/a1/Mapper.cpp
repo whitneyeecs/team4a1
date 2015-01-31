@@ -18,21 +18,30 @@ void eecs467::Mapper::update(const maebot_processed_laser_scan_t& scan) {
 		point.x = scan.x_pos[i];
 		point.y = scan.y_pos[i];
 
-		float deltaX = _separationSize * cos(scan.thetas[i]);
-		float deltaY = _separationSize * sin(scan.thetas[i]);
-		float endX = deltaX * scan.ranges[i];
+		float deltaX = _separationSize * _grid.metersPerCell() *
+			cos(scan.thetas[i]);
+		float deltaY = _separationSize * _grid.metersPerCell() *
+			sin(scan.thetas[i]);
+		int steps = scan.ranges[i] / (_separationSize * _grid.metersPerCell());
 
 		Point<int> cellPos = { -1, -1 };
-		while (point.x < endX) {
+		for (int i = 0; i < steps; ++i) {
 			cellPos = global_position_to_grid_cell(point, _grid);
 			// update empty cells
-			_grid(cellPos.x, cellPos.y) -= 2;
+
+			if (_grid(cellPos.y, cellPos.x) < -127) {
+				_grid(cellPos.y, cellPos.x) = -128;
+			} else {
+				_grid(cellPos.y, cellPos.x) -= 1;
+			}
 			point.x += deltaX;
 			point.y += deltaY;
 		}
 		if (cellPos.x != -1) {
 			// update full cells
-			_grid(cellPos.x, cellPos.y) += 1;
+			if (_grid(cellPos.y, cellPos.x) != 127) { 
+				_grid(cellPos.y, cellPos.x) += 1;
+			}
 		}
 	}
 }

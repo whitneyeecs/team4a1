@@ -126,10 +126,10 @@ bool eecs467::LaserCorrector::getCorrectedLcmMsg(maebot_processed_laser_scan_t& 
 	if (msg.num_ranges != msg.ranges.size()) {
 		return false;
 	}
-	printf("msg\n");
-	for (int i = 0; i < msg.num_ranges; ++i) {
-		printf("%f\t%f\t%f\n", msg.x_pos[i], msg.y_pos[i], msg.thetas[i]);
-	}
+	// printf("msg\n");
+	// for (int i = 0; i < msg.num_ranges; ++i) {
+	// 	printf("%f\t%f\t%f\n", msg.x_pos[i], msg.y_pos[i], msg.theta);
+	// }
 	_msgQueue.pop_front();
 	return true;
 }

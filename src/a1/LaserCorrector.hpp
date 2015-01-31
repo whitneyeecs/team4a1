@@ -23,6 +23,7 @@ private:
 		float intensity;
 		float posX;
 		float posY;
+		float scale;
 	};
 
 	std::deque<SingleLaser> _scansToProcess;

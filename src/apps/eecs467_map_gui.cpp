@@ -108,7 +108,7 @@ public:
 
 		for (unsigned int i = 0; i < grid.heightInCells(); ++i){
 			for (unsigned int j = 0; j < grid.widthInCells(); ++j) {
-				im->buf[i * im->stride + j] = (int8_t) (grid(i, j) + 128);
+				im->buf[i * im->stride + j] = -(int8_t) (grid(i, j) + 128);
 			}
 		}
 
@@ -206,7 +206,7 @@ private:
 				vx_object_t* vim = vxo_chain(
 					vxo_mat_translate3(origin.x, origin.y, 0),
 					vxo_mat_scale((double)state->grid.metersPerCell()),
-					vxo_image_from_u8(state->im, VXO_IMAGE_FLIPY,
+					vxo_image_from_u8(state->im, 0,
 					VX_TEX_MIN_FILTER | VX_TEX_MAG_FILTER));
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
 			}
