@@ -16,7 +16,7 @@ void eecs467::ParticleFilter::pushMap(
 }
 
 
-void eecs467::ParticleFilter::init(){
+void eecs467::ParticleFilter::init(const int64_t utime){
 	maebot_particle_t  particle;
 	Point<float> point;
 	float theta;
@@ -48,7 +48,7 @@ printf("x: %f\ty: %f\ttheta: %f\n", point.x, point.y, theta);
 			continue;
 		}
 		
-		particle.pose.utime = 0;
+		particle.pose.utime = utime;
 		particle.pose.x = point.x;
 		particle.pose.y = point.y;
 		particle.pose.theta = theta;
@@ -58,3 +58,76 @@ printf("x: %f\ty: %f\ttheta: %f\n", point.x, point.y, theta);
 
 	}//end for
 }
+
+
+void eecs467::ParticleFilter::pushOdometry(maebot_motor_feedback_t& odometry){
+
+	_odometry = odometry;
+}
+
+void eecs467::ParticleFilter::pushScan(maebot_laser_scan_t& scan){
+	_scan = scan;
+}
+
+void eecs467::ParticleFilter::drawRandomSamples(){
+
+	gsl_rng * r = gslu_rand_rng_alloc();
+	
+	float target = 0.0;
+	float weight = 0.0;
+	int j = 0;
+
+	for(int i = 0; i < eecs467::numParticles; ++i){
+		target = gslu_rand_uniform(r);
+		for( ; weight < target; ++j){
+			weight += _prior[j].prob;
+		}
+		_random_samples[i] = _prior[j];
+		j = 0;
+		weight = 0.0;
+		_random_samples[i].prob = 0.0;
+	}
+}
+
+void eecs467::ParticleFilter::normalizeAndSort(){
+
+	std::sort(_post_action.begin(), _post_action.end(), sort);
+	
+	float weight = 0.0;
+
+	//get total probability
+	//
+	for(int i = 0; i < numParticles; ++i){
+		weight += _post_action[i].prob;
+	}
+
+	//normalize
+	//
+	for(int i = 0; i < numParticles; ++i){
+		_post_action[i].prob /= weight;
+	}
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
