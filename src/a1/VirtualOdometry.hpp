@@ -16,6 +16,7 @@ private:
 	int32_t _currRightTick;
 	int32_t _currLeftTick;
 	int64_t _currUtime;
+
 public:
 	VirtualOdometry(int32_t rightTick = 0, int32_t leftTick = 0, int64_t utime = -1);
 
