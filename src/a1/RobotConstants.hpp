@@ -5,6 +5,8 @@
 
 namespace eecs467 {
 
+
+static const int numParticles = 300;
 static const float baseLength = 0.08; // meters
 static const float metersPerTick = 0.00020944; // meters per tick of encoder
 static const int maxNumLasersPerScan = 400; // a max number of laser readings per laser scan
