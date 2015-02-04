@@ -54,7 +54,6 @@ public:
 
 private:
 
-
 	void handleLaserMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_laser_scan_t* msg) {

@@ -90,6 +90,24 @@ void eecs467::LaserCorrector::process() {
 	}
 }
 
+void eecs467::LaserCorrector::clearPoses() {
+	_poses.clear();
+}
+
+void eecs467::LaserCorrector::clearScans() {
+	_scansToProcess.clear();
+}
+
+/**
+ * @brief does the same thing as process however it will not
+ * clear the scans after it's processed it (so when this is
+ * called again it will be processing the same scans);
+ * @details [long description]
+ */
+void processSaveScans();
+
+
+
 bool eecs467::LaserCorrector::getCorrectedLcmMsg(maebot_processed_laser_scan_t& msg) {
 	if (_processedScans.ranges.empty()) {
 		return false;

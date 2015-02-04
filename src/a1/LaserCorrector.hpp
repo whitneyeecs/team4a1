@@ -53,6 +53,18 @@ public:
 	 */
 	void process();
 
+	void clearPoses();
+
+	void clearScans();
+
+	/**
+	 * @brief does the same thing as process however it will not
+	 * clear the scans after it's processed it (so when this is
+	 * called again it will be processing the same scans);
+	 * @details [long description]
+	 */
+	void processSaveScans();
+
 	/**
 	 * @brief fills an lcm msg with corrected scans
 	 * @details will only work if all scans have been processed

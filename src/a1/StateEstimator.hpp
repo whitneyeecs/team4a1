@@ -1,43 +1,24 @@
 #ifndef STATE_ESTIMATOR_HPP
 #define STATE_ESTIMATOR_HPP
 
+// C++
 #include <stdint.h>
+
+
+// lcm types
 #include "lcmtypes/maebot_pose_t.h"
 
 namespace eecs467 {
 
 /**
- * @brief State Estimator for the maebot
+ * @brief simple funtion that takes a pose and changes it by delta tick values
+ * @param pose pose to advance
+ * @param deltaRight number of ticks of right wheel since last pose
+ * @param deltaLeft number of ticks of left wheel since last pose
+ * @return new pose
  */
-class StateEstimator {
-private:
-	maebot_pose_t _pose;
-
-public:
-	StateEstimator(float x = 0, float y = 0, float heading = 0);
-
-	/**
-	 * @brief updates the state with a given velocity and timestamp
-	 * @details [long description]
-	 * 
-	 * @param velRIght velocity of right wheel
-	 * @param velLeft velocity of left wheel
-	 * @param utime [description]
-	 */
-	void update(float velRight, float velLeft, int64_t utime);
-
-	void update(float x, float y, float theta, int64_t utime);
-
-	void update(const maebot_pose_t& pose);
-
-	maebot_pose_t getLatestPoseCopy() const;
-
-	const maebot_pose_t& getLatestPose() const;
-};
+maebot_pose_t advanceState(const maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t deltaTime);
 
 }
-
-
-
 
 #endif /* STATE_ESTIMATOR_HPP */
