@@ -1,0 +1,6 @@
+struct maebot_particle_t {
+	
+	maebot_pose_t pose;
+	float prob;
+
+}

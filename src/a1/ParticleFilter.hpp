@@ -11,6 +11,9 @@
 #include <lcmtypes/maebot_pose_t.hpp>
 #include <lcmtypes/maebot_processed_laser_scan_t.hpp>
 #include <lcmtypes/maebot_occupancy_grid_t.hpp>
+#include <lcmtypes/maebot_particle_t.hpp>
+#include <lcmtypes/maebot_motor_feedback_t.hpp>
+#include <lcmtypes/maebot_particle_map_t.hpp>
 
 namespace eecs467{
 
@@ -20,21 +23,25 @@ namespace eecs467{
 /////////////////////////////////////////////////////////////////
 class ParticleFilter{
 private:
-	typedef struct Particle{
-		maebot_pose_t pose;
-		float probability;
-	}Particle;
+//	typedef struct Particle{
+//		maebot_pose_t pose;
+//		float probability;
+//	}Particle;
 
 	eecs467::OccupancyGrid _map;
+	
+	maebot_motor_feedback_t _virtualOdometry;
+	maebot_motor_feedback_t _odometry;
+	maebot_laser_scan_t _scan;
 
-	std::vector<Particle> _prior;
-	std::vector<Particle> _post_unnormalized;
-	std::vector<Particle> _post_normalized;
+	std::vector<maebot_particle_t> _prior;
+	std::vector<maebot_particle_t> _random_samples;
+	std::vector<maebot_particle_t> _post_action;
 
 public:
 	typedef struct ParticleComp{
-		bool operator()(Particle* a, Particle* b) const{
-			return a->probability > b->probability;
+		bool operator()(maebot_particle_t a, maebot_particle_t b) const{
+			return a.prob > b.prob;
 		}
 	}ParticleComp;
 
@@ -49,7 +56,19 @@ public:
 	//
 	//initializes prior particle vector with random poses
 	//
-	void init();	
+	//
+	void init(const int64_t utime);	
+
+	//
+	//pushes odometry to be used in action model
+	//
+	void pushOdometry(maebot_motor_feedback_t& odometry);
+
+	void pushScan(maebot_laser_scan_t& scan);
+
+	void drawRandomSamples();
+
+	void normalizeAndSort();
 
 }; //end class
 
