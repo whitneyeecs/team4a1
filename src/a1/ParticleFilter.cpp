@@ -61,8 +61,7 @@ printf("x: %f\ty: %f\ttheta: %f\n", point.x, point.y, theta);
 
 
 void eecs467::ParticleFilter::pushOdometry(maebot_motor_feedback_t& odometry){
-
-	_odometry = odometry;
+	_odo.update(odometry, _scan.utime);
 }
 
 void eecs467::ParticleFilter::pushScan(maebot_laser_scan_t& scan){
@@ -109,10 +108,9 @@ void eecs467::ParticleFilter::normalizeAndSort(){
 	
 }
 
+void eecs467::ParticleFilter::actionModel(maebot_particle_t& particle) {
 
-
-
-
+}
 
 
 

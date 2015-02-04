@@ -4,9 +4,12 @@
 #include <vector>
 #include <algorithm>
 
+#include "a1/VirtualOdometry.hpp"
+#include "a1/StateEstimator.hpp"
+
 #include "mapping/occupancy_grid.hpp"
 #include "mapping/occupancy_grid_utils.hpp"
-	
+
 #include <lcmtypes/maebot_laser_scan_t.hpp>
 #include <lcmtypes/maebot_pose_t.hpp>
 #include <lcmtypes/maebot_processed_laser_scan_t.hpp>
@@ -30,8 +33,7 @@ private:
 
 	eecs467::OccupancyGrid _map;
 	
-	maebot_motor_feedback_t _virtualOdometry;
-	maebot_motor_feedback_t _odometry;
+	VirtualOdometry _odo;
 	maebot_laser_scan_t _scan;
 
 	std::vector<maebot_particle_t> _prior;
@@ -43,7 +45,7 @@ public:
 		bool operator()(maebot_particle_t a, maebot_particle_t b) const{
 			return a.prob > b.prob;
 		}
-	}ParticleComp;
+	} ParticleComp;
 
 public:
 	ParticleFilter();
@@ -70,6 +72,8 @@ public:
 
 	void normalizeAndSort();
 
+private:
+	void actionModel(maebot_particle_t& particle);
 }; //end class
 
 }//end namespace

@@ -6,7 +6,7 @@
 
 
 // lcm types
-#include "lcmtypes/maebot_pose_t.h"
+#include "lcmtypes/maebot_pose_t.hpp"
 
 namespace eecs467 {
 
