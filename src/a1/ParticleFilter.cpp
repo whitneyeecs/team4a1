@@ -17,7 +17,7 @@ void eecs467::ParticleFilter::pushMap(
 
 
 void eecs467::ParticleFilter::init(){
-	Particle particle;
+	maebot_particle_t  particle;
 	Point<float> point;
 	float theta;
 	
@@ -48,10 +48,11 @@ printf("x: %f\ty: %f\ttheta: %f\n", point.x, point.y, theta);
 			continue;
 		}
 		
+		particle.pose.utime = 0;
 		particle.pose.x = point.x;
 		particle.pose.y = point.y;
 		particle.pose.theta = theta;
-		particle.probability = 0.0;
+		particle.prob = 0.0;
 
 		_prior.push_back(particle);
 

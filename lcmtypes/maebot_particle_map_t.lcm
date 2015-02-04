@@ -1,0 +1,8 @@
+struct maebot_particle_map_t
+{
+	
+	int64_t utime;
+	
+	int32_t num_particles;
+	maebot_particle_t particles[num_particles];
+}
