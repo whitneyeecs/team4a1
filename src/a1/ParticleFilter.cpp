@@ -1,11 +1,13 @@
-#include "ParticleFilter.hpp"
-#include "RobotConstants.hpp"
+#include "a1/ParticleFilter.hpp"
+#include "a1/RobotConstants.hpp"
+#include "a1/SlamConstants.hpp"
 
 #include "math/gsl_util_rand.h"
 #include "math/angle_functions.hpp"
 #include "math/point.hpp"
 
-eecs467::ParticleFilter::ParticleFilter() { }
+eecs467::ParticleFilter::ParticleFilter() :
+	_actionModel(eecs467::actionModelK1, eecs467::actionModelK2) { }
 
 eecs467::ParticleFilter::ParticleComp sort;
 

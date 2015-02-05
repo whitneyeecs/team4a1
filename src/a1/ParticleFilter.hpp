@@ -6,6 +6,7 @@
 
 #include "a1/VirtualOdometry.hpp"
 #include "a1/StateEstimator.hpp"
+#include "a1/ActionModel.hpp"
 
 #include "mapping/occupancy_grid.hpp"
 #include "mapping/occupancy_grid_utils.hpp"
@@ -33,6 +34,7 @@ private:
 
 	eecs467::OccupancyGrid _map;
 	
+	ActionModel _actionModel;
 	VirtualOdometry _odo;
 	maebot_laser_scan_t _scan;
 

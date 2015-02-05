@@ -29,6 +29,12 @@ public:
 	int32_t getDeltaRight() const;
 
 	int32_t getDeltaLeft() const;
+
+	int64_t getUtime() const;
+
+	int32_t getRightTicks() const;
+
+	int32_t getLeftTicks() const;
 };
 
 }

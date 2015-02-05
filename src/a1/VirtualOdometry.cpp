@@ -15,7 +15,10 @@ void eecs467::VirtualOdometry::update(int32_t rightTick, int32_t leftTick, int64
 	_lastLeftTick = _currLeftTick;
 	_lastUtime = _currUtime;
 
-	float scaling = (measuredUtime - _currUtime) / (utime - _currUtime);
+	float scaling = (float) (measuredUtime - _currUtime) / (float) (utime - _currUtime);
+	// printf("scaling: %f\n", scaling);
+	// printf("%f\t%f\n", (float)(rightTick - _currRightTick),
+		// (float)(leftTick - _currLeftTick));
 	_currRightTick += scaling * (float)(rightTick - _currRightTick);
 	_currLeftTick += scaling * (float)(leftTick - _currLeftTick);
 	_currUtime = measuredUtime;
@@ -32,4 +35,16 @@ int32_t eecs467::VirtualOdometry::getDeltaRight() const {
 
 int32_t eecs467::VirtualOdometry::getDeltaLeft() const {
 	return _currLeftTick - _lastLeftTick;
+}
+
+int64_t eecs467::VirtualOdometry::getUtime() const {
+	return _currUtime;
+}
+
+int32_t eecs467::VirtualOdometry::getRightTicks() const {
+	return _currRightTick;
+}
+
+int32_t eecs467::VirtualOdometry::getLeftTicks() const {
+	return _currLeftTick;
 }
