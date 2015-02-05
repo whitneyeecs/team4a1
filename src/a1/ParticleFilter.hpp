@@ -72,8 +72,6 @@ public:
 
 	void normalizeAndSort();
 
-private:
-	void actionModel(maebot_particle_t& particle);
 }; //end class
 
 }//end namespace

@@ -108,16 +108,6 @@ void eecs467::ParticleFilter::normalizeAndSort(){
 	
 }
 
-void eecs467::ParticleFilter::actionModel(maebot_particle_t& particle) {
-
-}
-
-
-
-
-
-
-
 
 
 
