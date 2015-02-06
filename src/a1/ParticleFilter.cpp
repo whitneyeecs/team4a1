@@ -1,12 +1,14 @@
-#include "ParticleFilter.hpp"
-#include "RobotConstants.hpp"
+#include "a1/ParticleFilter.hpp"
+#include "a1/RobotConstants.hpp"
+#include "a1/SlamConstants.hpp"
 
 #include "math/gsl_util.h"
 #include "math/gsl_util_rand.h"
 #include "math/angle_functions.hpp"
 #include "math/point.hpp"
 
-eecs467::ParticleFilter::ParticleFilter() { }
+eecs467::ParticleFilter::ParticleFilter() :
+	_actionModel(eecs467::actionModelK1, eecs467::actionModelK2) { }
 
 eecs467::ParticleFilter::ParticleComp sort;
 
@@ -73,8 +75,7 @@ printf("pushed\n\n");
 
 
 void eecs467::ParticleFilter::pushOdometry(maebot_motor_feedback_t& odometry){
-
-	_odometry = odometry;
+	_odo.update(odometry, _scan.utime);
 }
 
 void eecs467::ParticleFilter::pushScan(const maebot_laser_scan_t& scan){
@@ -132,17 +133,6 @@ eecs467::ParticleFilter::toLCM(){
 	msg.particles = _prior;
 	return msg;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
