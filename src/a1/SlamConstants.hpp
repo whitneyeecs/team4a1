@@ -6,8 +6,8 @@ namespace eecs467 {
 static const int emptyEvidenceStrength = 2;
 static const int occupiedEvidenceStrength = 1;
 
-static const float actionModelK1 = 1;
-static const float actionModelK2 = 1;
+static const float actionModelK1 = 0.05;
+static const float actionModelK2 = 0.05;
 
 }
 

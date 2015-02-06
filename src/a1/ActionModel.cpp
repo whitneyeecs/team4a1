@@ -1,11 +1,12 @@
-#include "ActionModel.hpp"
-
+#include "a1/ActionModel.hpp"
 #include "a1/StateEstimator.hpp"
 
 #include <cmath>
+#include <chrono>
 
 eecs467::ActionModel::ActionModel(float k1, float k2) 
-	: _normDist(0, 1), _k1(k1), _k2(k2) { }
+	: _randGen(std::chrono::system_clock::now().time_since_epoch().count()),
+	_normDist(0, 1), _k1(k1), _k2(k2) { }
 
 void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t deltaTime) {
 	maebot_pose_t nextPose = eecs467::advanceState(pose,
@@ -26,4 +27,5 @@ void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_
 	pose.x += (deltaS + e2)* cos(pose.theta + alpha + e1);
 	pose.y += (deltaS + e2)* sin(pose.theta + alpha + e1);
 	pose.theta += deltaTheta + e1 + e3;
+	pose.utime = nextPose.utime;
 }
