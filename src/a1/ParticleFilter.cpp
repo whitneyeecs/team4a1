@@ -1,6 +1,7 @@
 #include "ParticleFilter.hpp"
 #include "RobotConstants.hpp"
 
+#include "math/gsl_util.h"
 #include "math/gsl_util_rand.h"
 #include "math/angle_functions.hpp"
 #include "math/point.hpp"
@@ -29,34 +30,45 @@ void eecs467::ParticleFilter::init(const int64_t utime){
 	for(int i = 0; i < eecs467::numParticles; ++i){
 		
 		//generate point in grid coordinates
-		point.x = gslu_rand_uniform_pos(r) * _map.widthInMeters();
-		point.y = gslu_rand_uniform_pos(r) * _map.heightInMeters();
+		//used 1.99 instead of 2. out of paranoia that random draw right
+		//on edge of map would cause seg fault. 
+		point.x = (gslu_rand_uniform_pos(r) * _map.widthInMeters() * 1.99)
+					- _map.widthInMeters();
+		point.y = (gslu_rand_uniform_pos(r) * _map.heightInMeters() * 1.99)
+					- _map.widthInMeters();
 		theta = wrap_to_pi(2 * M_PI * gslu_rand_uniform(r));
 
-		//convert to global coordinates
-		point = grid_position_to_global_position(point, _map);
 
-printf("x: %f\ty: %f\ttheta: %f\n", point.x, point.y, theta);
+printf("#: %d\t x: %f\ty: %f\ttheta: %f\n", i, point.x, point.y, theta);
+
+
 	
 		//find grid cell that point is in
 		Point<int> cell = global_position_to_grid_cell(
 			point, _map);
-		
+
+printf("Grid cell: %i, %i\n", cell.x, cell.y);
+printf("Grid cell logOdds: %i\n", _map.logOdds(cell.x, cell.y));
+
+
 		//if grid cell is occupied discard and try again
-		if(_map.logOdds(cell.x, cell.y) < 120){
+		if(_map.logOdds(cell.x, cell.y) > -120){
 			--i;
 			continue;
 		}
 		
+
 		particle.pose.utime = utime;
 		particle.pose.x = point.x;
 		particle.pose.y = point.y;
 		particle.pose.theta = theta;
 		particle.prob = 0.0;
+printf("about to push\n");
 
 		_prior.push_back(particle);
-
+printf("pushed\n\n");
 	}//end for
+	
 }
 
 
@@ -65,7 +77,7 @@ void eecs467::ParticleFilter::pushOdometry(maebot_motor_feedback_t& odometry){
 	_odometry = odometry;
 }
 
-void eecs467::ParticleFilter::pushScan(maebot_laser_scan_t& scan){
+void eecs467::ParticleFilter::pushScan(const maebot_laser_scan_t& scan){
 	_scan = scan;
 }
 
@@ -105,11 +117,21 @@ void eecs467::ParticleFilter::normalizeAndSort(){
 	//
 	for(int i = 0; i < numParticles; ++i){
 		_post_action[i].prob /= weight;
+		_prior[i] = _post_action[i];
 	}
 	
 }
 
-
+maebot_particle_map_t
+eecs467::ParticleFilter::toLCM(){
+	
+	maebot_particle_map_t msg;
+	msg.utime = _prior.front().pose.utime;
+	msg.grid = _map.toLCM();
+	msg.num_particles = (int32_t)_prior.size();
+	msg.particles = _prior;
+	return msg;
+}
 
 
 

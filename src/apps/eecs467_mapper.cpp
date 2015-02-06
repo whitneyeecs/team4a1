@@ -15,9 +15,11 @@
 #include "mapping/occupancy_grid.hpp"
 
 #include "a1/LaserCorrector.hpp"
+#include "a1/ParticleFilter.hpp"
 #include "a1/Mapper.hpp"
 
 eecs467::LaserCorrector laser;
+eecs467::ParticleFilter pf;
 
 class StateHandler {
 public:
@@ -61,12 +63,25 @@ private:
 	
 		pthread_mutex_lock(&dataMutex);
 		laser.pushNewScans(*msg);
+		pf.pushScan(*msg);
 		pthread_mutex_unlock(&dataMutex);
 	}
 
 	void handleMotorFeedbackMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_motor_feedback_t* msg) {
+			
+			pthread_mutex_lock(&dataMutex);
+			pf.pushMap(mapper.getGrid());
+			pthread_mutex_unlock(&dataMutex);
+		
+		
+			pthread_mutex_lock(&dataMutex);
+			if(pf.readyToInit() && !pf.initialized()){
+				pf.init(0);
+printf("finished initialization\n");
+			}
+			pthread_mutex_unlock(&dataMutex);
 	}
 
 	void handlePoseMessage(const lcm::ReceiveBuffer* rbuf,
@@ -89,10 +104,18 @@ private:
 			laser.process();
 			maebot_processed_laser_scan_t message;
 			if (!laser.getCorrectedLcmMsg(message)) {
+
+			if(pf.initialized()){
+				maebot_particle_map_t pf_msg = pf.toLCM();
+				state->lcm.publish("MAEBOT_PARTICLE_MAP", &pf_msg);
+				exit(0);
+			}
 				pthread_mutex_unlock(&state->dataMutex);
 				continue;
 			}
 			state->mapper.update(message);
+
+//			pf.pushMap(mapper.getGrid());
 			
 			maebot_map_data_t msg;
 			msg.scan = message;
@@ -104,6 +127,14 @@ private:
 			state->lcm.publish("MAEBOT_MAP_DATA", &msg);
 			state->path_x.clear();
 			state->path_y.clear();
+
+			//generate and broadcast particle filter and map
+
+			if(pf.initialized()){
+				maebot_particle_map_t pf_msg = pf.toLCM();
+				state->lcm.publish("MAEBOT_PARTICLE_MAP", &pf_msg);
+				exit(0);
+			}
 			pthread_mutex_unlock(&state->dataMutex);
 		}
 

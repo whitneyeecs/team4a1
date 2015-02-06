@@ -39,10 +39,12 @@ BIN_EECS467_MAEBOT_EXAMPLE = $(BIN_PATH)/eecs467_maebot_example
 BIN_EECS467_MAEBOT_VIDEO_TELOP = $(BIN_PATH)/eecs467_maebot_video_telop
 BIN_EECS467_MAP_GUI = $(BIN_PATH)/eecs467_map_gui
 BIN_EECS467_MAPPER = $(BIN_PATH)/eecs467_mapper
+BIN_EECS_PARTICLE_GUI = $(BIN_PATH)/eecs_particle_gui
 
 ALL = $(LIB_EECS467) $(BIN_EECS467_GUI_EXAMPLE) $(BIN_EECS467_REXARM_EXAMPLE) \
 	  $(BIN_EECS467_MAEBOT_EXAMPLE) $(BIN_EECS467_MAEBOT_VIDEO_TELOP) \
-	  $(BIN_EECS467_MAP_GUI) $(BIN_EECS467_MAPPER)
+	  $(BIN_EECS467_MAP_GUI) $(BIN_EECS467_MAPPER)\
+	  $(BIN_EECS_PARTICLE_GUI)
 
 all: $(ALL)
 
@@ -67,6 +69,10 @@ $(BIN_EECS467_MAEBOT_VIDEO_TELOP): maebot_video_teleop.o $(LIBDEPS)
 	@$(CC) -o $@ $^ $(LDFLAGS)
 
 $(BIN_EECS467_MAP_GUI): eecs467_map_gui.o $(LIBDEPS)
+	@echo "\t$@"
+	@$(CXX) -o $@ $^ $(LDFLAGS)
+
+$(BIN_EECS_PARTICLE_GUI): eecs_particle_gui.o $(LIBDEPS)
 	@echo "\t$@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
 

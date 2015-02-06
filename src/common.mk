@@ -26,7 +26,7 @@ CFLAGS_SHARED = -g -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_REENTRANT \
 
 CFLAGS_STD   := -std=gnu99 -Wno-format-zero-length $(CFLAGS_SHARED)
 CXXFLAGS_STD := -std=c++0x $(CFLAGS_SHARED)
-LDFLAGS_STD  := -lm -lpthread
+LDFLAGS_STD  := -lm -lpthread -lgsl
 
 CC           := gcc
 CXX          := g++
