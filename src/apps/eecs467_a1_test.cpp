@@ -6,9 +6,7 @@
 #include "a1/ActionModel.hpp"
 
 void VirtualOdometryTest();
-
 void StateEstimatorTest();
-
 void ActionModelTest();
 
 int main() {

@@ -4,6 +4,8 @@
 #include <cmath>
 #include <chrono>
 
+#include "math/angle_functions.hpp"
+
 eecs467::ActionModel::ActionModel(float k1, float k2) 
 	: _randGen(std::chrono::system_clock::now().time_since_epoch().count()),
 	_normDist(0, 1), _k1(k1), _k2(k2) { }
@@ -26,6 +28,6 @@ void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_
 
 	pose.x += (deltaS + e2)* cos(pose.theta + alpha + e1);
 	pose.y += (deltaS + e2)* sin(pose.theta + alpha + e1);
-	pose.theta += deltaTheta + e1 + e3;
+	pose.theta = angle_sum(deltaTheta + e1 + e3, pose.theta);
 	pose.utime = nextPose.utime;
 }
