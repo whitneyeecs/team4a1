@@ -16,7 +16,7 @@ static const int maxNumLasersPerScan = 400; // a max number of laser readings pe
  * @return theta in robot frame in radians
  */
 static inline float laserThetaToMaebotTheta(float laserTheta) {
-	return - laserTheta;
+	return -laserTheta;
 }
 
 }

@@ -7,13 +7,13 @@ maebot_pose_t eecs467::advanceState(const maebot_pose_t& pose, int32_t deltaRigh
 	maebot_pose_t newPose;
 
 	float distance = eecs467::metersPerTick * 
-		(float)(deltaRight + deltaLeft) / 2;
+		(float)(deltaRight + deltaLeft) / 2.0f;
 	float theta = eecs467::metersPerTick * 
 		(float)(deltaRight - deltaLeft) / eecs467::baseLength;
 
-	float alpha = theta / 2;
-	newPose.x += distance * cos(pose.theta + alpha);
-	newPose.y += distance * sin(pose.theta + alpha);
+	float alpha = theta / 2.0f;
+	newPose.x = pose.x + distance * cos(pose.theta + alpha);
+	newPose.y = pose.y + distance * sin(pose.theta + alpha);
 	newPose.theta = angle_sum(pose.theta, theta);
 	newPose.utime = pose.utime + deltaTime;
 	return newPose;

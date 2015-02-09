@@ -61,10 +61,10 @@ private:
 		const maebot_laser_scan_t* msg) {
 	
 		pthread_mutex_lock(&dataMutex);
-printf("recieved laser scan\n");
+// printf("recieved laser scan\n");
 		laser.pushNewScans(*msg);
 		if(!pf.processing()){
-printf("pushed laser scan\n\n");
+// printf("pushed laser scan\n");
 			pf.pushScan(*msg);
 		}
 		pthread_mutex_unlock(&dataMutex);
@@ -73,14 +73,12 @@ printf("pushed laser scan\n\n");
 	void handleMotorFeedbackMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_motor_feedback_t* msg) {
-			
 			pthread_mutex_lock(&dataMutex);
-printf("recieved motor feedback\nodo msg l: %i\todo msg r: %i\n\n", msg->encoder_left_ticks, msg->encoder_right_ticks);
+// printf("recieved motor feedback\nodo msg l: %d\todo msg r: %d\n", msg->encoder_left_ticks, msg->encoder_right_ticks);
 			pf.pushMap(mapper.getGrid());
 			pf.pushOdometry(*msg);
 			pthread_mutex_unlock(&dataMutex);
-		
-		
+
 			pthread_mutex_lock(&dataMutex);
 			if(pf.readyToInit() && !pf.initialized()){
 				pf.init(msg);
@@ -124,7 +122,7 @@ printf("finished initialization\n");
 			state->mapper.update(message);
 
 //			pf.pushMap(mapper.getGrid());
-			
+
 			maebot_map_data_t msg;
 			msg.scan = message;
 			msg.utime = 0; // not used right now
@@ -139,7 +137,6 @@ printf("finished initialization\n");
 			//generate and broadcast particle filter and map
 
 			if(pf.initialized()){
-printf("sooooo\n");
 				maebot_particle_map_t pf_msg = pf.toLCM();
 				state->lcm.publish("MAEBOT_PARTICLE_MAP", &pf_msg);
 exit(0);
