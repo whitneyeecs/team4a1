@@ -22,8 +22,7 @@ void eecs467::LaserCorrector::pushNewPose(const maebot_pose_t& pose) {
 	// printf("pushed pose: %ld\n", pose.utime);
 }
 
-maebot_processed_laser_scan_t eecs467::LaserCorrector::single_scan_process(const maebot_laser_scan_t* msg,
-	const maebot_pose_t& begin, const maebot_pose_t& end) {
+maebot_processed_laser_scan_t eecs467::LaserCorrector::single_scan_process(const maebot_laser_scan_t* msg, const maebot_pose_t& begin, const maebot_pose_t& end) {
 
 	maebot_processed_laser_scan_t single_scan;
 
@@ -31,15 +30,24 @@ maebot_processed_laser_scan_t eecs467::LaserCorrector::single_scan_process(const
 	for(int i  = 0; i < msg->num_ranges; ++i) {
 		// interpolate the position of the vehicle for the scan
 		
+		float endtheta = wrap_to_pi(end.theta);
+		float begintheta = wrap_to_pi(begin.theta);
+
 		float scaling = (float) (msg->utime - begin.utime) /
 			(float) (end.utime - begin.utime);
 		float poseX = begin.x + scaling * (end.x - begin.x);
 		float poseY = begin.y + scaling * (end.y - begin.y);
-		float poseTheta = begin.theta + scaling * (end.theta - begin.theta);
+		
+		float tmptheta = scaling * angle_diff(endtheta, begintheta);
+		float poseTheta = angle_sum(begintheta, tmptheta);
+
 
 		single_scan.ranges.push_back(msg->ranges[i]);
-		single_scan.thetas.push_back(angle_sum(poseTheta, 
-									laserThetaToMaebotTheta(msg->thetas[i])));
+
+		tmptheta = wrap_to_pi(laserThetaToMaebotTheta(msg->thetas[i]));
+		tmptheta = angle_sum(poseTheta, tmptheta);
+		_processedScans.thetas.push_back(tmptheta);
+
 		single_scan.times.push_back(msg->times[i]);
 		single_scan.intensities.push_back(msg->intensities[i]);
 		single_scan.x_pos.push_back(poseX);
@@ -47,7 +55,6 @@ maebot_processed_laser_scan_t eecs467::LaserCorrector::single_scan_process(const
 	}
 
 	return single_scan;
-
 }
 
 
@@ -79,27 +86,26 @@ void eecs467::LaserCorrector::pf_process(maebot_laser_scan_t* msg) {
 			_poses.push_front(oldest);
 			return;
 		}
- 		
- 		float delta_theta = _poses.front().theta - oldest.theta;
-// 		if (delta_theta > 2) {
-//printf("Turning too fast\n");
- 			// we are turning too fast or somethings gone wrong with the pose
-//			_scansToProcess.clear();
-			// _poses.clear();
- //			return;
-// 		}
+
+		_poses.front().theta = wrap_to_pi(_poses.front().theta);
+ 		oldest.theta = wrap_to_pi(oldest.theta);
 
 		// interpolate the position of the vehicle for the scan
 		float scaling = (float) (laser.utime - oldest.utime) /
 			(float) (_poses.front().utime - oldest.utime);
 		float poseX = oldest.x + scaling * (_poses.front().x - oldest.x);
 		float poseY = oldest.y + scaling * (_poses.front().y - oldest.y);
-		float poseTheta = oldest.theta + scaling * (_poses.front().theta - oldest.theta);
+		
+		float tmptheta = scaling * angle_diff(_poses.front().theta, oldest.theta);
+		float poseTheta = angle_sum(oldest.theta, tmptheta);
 
 		// push processed scan into current message
 		_processedScans.ranges.push_back(laser.range);
-		_processedScans.thetas.push_back(angle_sum(poseTheta,
-			laserThetaToMaebotTheta(laser.theta)));
+
+		tmptheta = wrap_to_pi(laserThetaToMaebotTheta(laser.theta));
+		tmptheta = angle_sum(poseTheta, tmptheta);
+		_processedScans.thetas.push_back(tmptheta);
+
 		_processedScans.times.push_back(laser.utime);
 		_processedScans.intensities.push_back(laser.intensity);
 		_processedScans.x_pos.push_back(poseX);
@@ -148,26 +154,26 @@ void eecs467::LaserCorrector::process() {
 			_poses.push_front(oldest);
 			return;
 		}
- 		
- 		float delta_theta = _poses.front().theta - oldest.theta;
- 		if (delta_theta > 2) {
- 			// we are turning too fast or somethings gone wrong with the pose
-			_scansToProcess.clear();
-			// _poses.clear();
- 			return;
- 		}
+
+		_poses.front().theta = wrap_to_pi(_poses.front().theta);
+ 		oldest.theta = wrap_to_pi(oldest.theta);
 
 		// interpolate the position of the vehicle for the scan
 		float scaling = (float) (laser.utime - oldest.utime) /
 			(float) (_poses.front().utime - oldest.utime);
 		float poseX = oldest.x + scaling * (_poses.front().x - oldest.x);
 		float poseY = oldest.y + scaling * (_poses.front().y - oldest.y);
-		float poseTheta = oldest.theta + scaling * (_poses.front().theta - oldest.theta);
+		
+		float tmptheta = scaling * angle_diff(_poses.front().theta, oldest.theta);
+		float poseTheta = angle_sum(oldest.theta, tmptheta);
 
 		// push processed scan into current message
 		_processedScans.ranges.push_back(laser.range);
-		_processedScans.thetas.push_back(angle_sum(poseTheta,
-			laserThetaToMaebotTheta(laser.theta)));
+
+		tmptheta = wrap_to_pi(laserThetaToMaebotTheta(laser.theta));
+		tmptheta = angle_sum(poseTheta, tmptheta);
+		_processedScans.thetas.push_back(tmptheta);
+
 		_processedScans.times.push_back(laser.utime);
 		_processedScans.intensities.push_back(laser.intensity);
 		_processedScans.x_pos.push_back(poseX);

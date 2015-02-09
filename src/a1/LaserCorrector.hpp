@@ -51,6 +51,15 @@ public:
 	/**
 	 * @brief tries to process as many laser ranges as possible
 	 */
+
+	maebot_processed_laser_scan_t single_scan_process(const maebot_laser_scan_t* msg,
+		const maebot_pose_t& begin, const maebot_pose_t& end);
+
+	/**
+	 * @brief does the same thing as process however for a single scan between 
+	 * two poses and returns the new corrected scan
+	*/
+
 	void process();
 
 	void pf_process(maebot_laser_scan_t* msg);
