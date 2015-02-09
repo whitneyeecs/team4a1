@@ -4,9 +4,12 @@
 #include <cmath>
 #include <chrono>
 
+#include "math/angle_functions.hpp"
+
 eecs467::ActionModel::ActionModel(float k1, float k2) 
-	: _randGen(std::chrono::system_clock::now().time_since_epoch().count()),
-	_normDist(0, 1), _k1(k1), _k2(k2) { }
+	: _k1(k1), _k2(k2) {
+	_rand = gslu_rand_rng_alloc();		
+}
 
 void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t deltaTime) {
 	maebot_pose_t nextPose = eecs467::advanceState(pose,
@@ -20,12 +23,12 @@ void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_
 	float alpha = atan2(deltaY, deltaX) - pose.theta;
 
 	// getting noise
-	float e1 = _normDist(_randGen) * alpha * _k1;
-	float e2 = _normDist(_randGen) * deltaS * _k2;
-	float e3 = _normDist(_randGen) * (deltaTheta - alpha) * _k1;
+	float e1 = gslu_rand_normal(_rand) * alpha * _k1;
+	float e2 = gslu_rand_normal(_rand) * deltaS * _k2;
+	float e3 = gslu_rand_normal(_rand) * (deltaTheta - alpha) * _k1;
 
 	pose.x += (deltaS + e2)* cos(pose.theta + alpha + e1);
 	pose.y += (deltaS + e2)* sin(pose.theta + alpha + e1);
-	pose.theta += deltaTheta + e1 + e3;
-//	pose.utime = nextPose.utime;
+	pose.theta = angle_sum(deltaTheta + e1 + e3, pose.theta);
+	pose.utime = nextPose.utime;
 }

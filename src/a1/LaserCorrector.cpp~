@@ -167,6 +167,7 @@ void eecs467::LaserCorrector::process() {
 			(float) (_poses.front().utime - oldest.utime);
 		float poseX = oldest.x + scaling * (_poses.front().x - oldest.x);
 		float poseY = oldest.y + scaling * (_poses.front().y - oldest.y);
+
 		
 		float tmptheta = scaling * angle_diff(_poses.front().theta, oldest.theta);
 		float poseTheta = angle_sum(oldest.theta, tmptheta);

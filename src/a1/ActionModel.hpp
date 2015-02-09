@@ -2,16 +2,16 @@
 #define ACTION_MODEL_HPP
 
 #include <stdint.h>
-#include <random>
 
 #include "lcmtypes/maebot_pose_t.hpp"
+
+#include "math/gsl_util_rand.h"
 
 namespace eecs467 {
 
 class ActionModel {
 private:
-	std::mt19937 _randGen;
-	std::normal_distribution<float> _normDist;
+	gsl_rng* _rand;
 	float _k1;
 	float _k2;
 public:

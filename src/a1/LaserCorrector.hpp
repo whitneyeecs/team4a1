@@ -62,6 +62,10 @@ public:
 
 	void process();
 
+	maebot_processed_laser_scan_t single_scan_process(const maebot_laser_scan_t& msg,
+		const maebot_pose_t& begin,
+		const maebot_pose_t& end);
+
 	void pf_process(maebot_laser_scan_t* msg);
 
 	void clearPoses();
