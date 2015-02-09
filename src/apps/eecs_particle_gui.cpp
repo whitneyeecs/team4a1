@@ -47,6 +47,7 @@ public:
 	eecs467::OccupancyGrid grid;
 	image_u8_t* im;
 	std::vector<float> path;
+	std::vector<float> prob_path;
 //	std::vector<float> lidar_rays;
 	pthread_mutex_t renderMutex;
 
@@ -115,22 +116,28 @@ public:
 				im->buf[i * im->stride + j] = (uint8_t) (-grid(i, j) + 127);
 			}
 		}
-
+		
+	
+		prob_path.push_back(msg->particles[0].pose.y);
+		prob_path.push_back(msg->particles[0].pose.x);
+		prob_path.push_back(0.0f);
+	
+		path.clear();
 		unsigned int i = 0;
 		if (path.size() == 0 && msg->num_particles != 0) {
-			path.push_back(msg->particles[i].pose.y);
 			path.push_back(msg->particles[i].pose.x);
+			path.push_back(msg->particles[i].pose.y);
 			path.push_back(0.0f);
 			i++;
 		}
 
 		for ( ; i < msg->particles.size(); ++i) {
-			path.push_back(msg->particles[i].pose.y);
 			path.push_back(msg->particles[i].pose.x);
+			path.push_back(msg->particles[i].pose.y);
 			path.push_back(0.0f);
 			
-			path.push_back(msg->particles[i].pose.y);
 			path.push_back(msg->particles[i].pose.x);
+			path.push_back(msg->particles[i].pose.y);
 			path.push_back(0.0f);
 
 		}
@@ -222,6 +229,15 @@ private:
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
 					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_red, 2.0f)));
 			}
+
+			if (state->prob_path.size() != 0) {
+				int vec_size = state->prob_path.size();
+				vx_resc_t* verts = vx_resc_copyf((state->prob_path).data(), vec_size);
+				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_green, 2.0f)));
+			}
+
+
 
 /*			if (state->lidar_rays.size() != 0) {
 				int vec_size = state->lidar_rays.size();

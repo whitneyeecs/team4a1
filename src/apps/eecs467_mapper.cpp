@@ -61,8 +61,12 @@ private:
 		const maebot_laser_scan_t* msg) {
 	
 		pthread_mutex_lock(&dataMutex);
+printf("recieved laser scan\n");
 		laser.pushNewScans(*msg);
-		pf.pushScan(*msg);
+		if(!pf.processing()){
+printf("pushed laser scan\n\n");
+			pf.pushScan(*msg);
+		}
 		pthread_mutex_unlock(&dataMutex);
 	}
 
@@ -71,15 +75,20 @@ private:
 		const maebot_motor_feedback_t* msg) {
 			
 			pthread_mutex_lock(&dataMutex);
+printf("recieved motor feedback\nodo msg l: %i\todo msg r: %i\n\n", msg->encoder_left_ticks, msg->encoder_right_ticks);
 			pf.pushMap(mapper.getGrid());
+			pf.pushOdometry(*msg);
 			pthread_mutex_unlock(&dataMutex);
 		
 		
 			pthread_mutex_lock(&dataMutex);
 			if(pf.readyToInit() && !pf.initialized()){
-				pf.init(0);
+				pf.init(msg);
 printf("finished initialization\n");
 			}
+			if(pf.readyToProcess())
+				pf.process();
+
 			pthread_mutex_unlock(&dataMutex);
 	}
 
@@ -107,7 +116,7 @@ printf("finished initialization\n");
 			if(pf.initialized()){
 				maebot_particle_map_t pf_msg = pf.toLCM();
 				state->lcm.publish("MAEBOT_PARTICLE_MAP", &pf_msg);
-				exit(0);
+//exit(0);
 			}
 				pthread_mutex_unlock(&state->dataMutex);
 				continue;
@@ -130,9 +139,10 @@ printf("finished initialization\n");
 			//generate and broadcast particle filter and map
 
 			if(pf.initialized()){
+printf("sooooo\n");
 				maebot_particle_map_t pf_msg = pf.toLCM();
 				state->lcm.publish("MAEBOT_PARTICLE_MAP", &pf_msg);
-				exit(0);
+exit(0);
 			}
 			pthread_mutex_unlock(&state->dataMutex);
 		}

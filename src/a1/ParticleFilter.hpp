@@ -32,7 +32,10 @@ private:
 	
 	ActionModel _actionModel;
 	VirtualOdometry _odo;
+	maebot_motor_feedback_t _odometry;
 	maebot_laser_scan_t _scan;
+	maebot_laser_scan_t* _scan_to_process;
+	bool _processing;
 	maebot_particle_map_t _particle_map;
 
 	std::vector<maebot_particle_t> _prior;
@@ -58,12 +61,12 @@ public:
 	//initializes prior particle vector with random poses
 	//
 	//
-	void init(const int64_t utime);	
+	void init(const maebot_motor_feedback_t* msg);	
 
 	//
 	//pushes odometry to be used in action model
 	//
-	void pushOdometry(maebot_motor_feedback_t& odometry);
+	void pushOdometry(const maebot_motor_feedback_t& odometry);
 
 	void pushScan(const maebot_laser_scan_t& scan);
 
@@ -75,7 +78,18 @@ public:
 
 	bool initialized(){ return !_prior.empty(); }
 
+	bool readyToProcess(){ return (_scan_to_process != NULL &&
+									_odometry.utime > _scan.utime); }
+	
+	float getProb(const maebot_processed_laser_scan_t& msg);
+
 	maebot_particle_map_t toLCM();
+
+	void process();
+
+	void actionModel(maebot_pose_t& pose, int32_t delta_l, int32_t delta_r);
+
+	bool processing(){ return _processing; }
 
 }; //end class
 
