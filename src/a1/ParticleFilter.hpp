@@ -7,6 +7,7 @@
 #include "a1/VirtualOdometry.hpp"
 #include "a1/StateEstimator.hpp"
 #include "a1/ActionModel.hpp"
+#include "a1/SensorModel.hpp"
 
 #include "mapping/occupancy_grid.hpp"
 #include "mapping/occupancy_grid_utils.hpp"
@@ -27,15 +28,16 @@ namespace eecs467{
 /////////////////////////////////////////////////////////////////
 class ParticleFilter{
 private:
-
-	eecs467::OccupancyGrid _map;
-	
 	ActionModel _actionModel;
+	SensorModel _sensorModel;
 	VirtualOdometry _odo;
-	maebot_motor_feedback_t _odometry;
+
+	bool _hasMap;
+	bool _processing;
+	bool _hasScan;
+	
 	maebot_laser_scan_t _scan;
 	maebot_laser_scan_t* _scan_to_process;
-	bool _processing;
 	maebot_particle_map_t _particle_map;
 
 	std::vector<maebot_particle_t> _prior;
@@ -74,14 +76,12 @@ public:
 
 	void normalizeAndSort();
 
-	bool readyToInit(){ return _map.widthInMeters() != 0.0; }
+	bool readyToInit(){ return _hasMap; }
 
 	bool initialized(){ return !_prior.empty(); }
 
-	bool readyToProcess(){ return (_scan_to_process != NULL &&
-									_odometry.utime > _scan.utime); }
-	
-	float getProb(const maebot_processed_laser_scan_t& msg);
+	bool readyToProcess(){ return (_hasScan &&
+									_odo.getUtime() > _scan.times[_scan.num_ranges - 1]); }
 
 	maebot_particle_map_t toLCM();
 

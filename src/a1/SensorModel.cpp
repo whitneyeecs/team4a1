@@ -4,7 +4,13 @@
 
 #include "lcmtypes/maebot_processed_laser_scan_t.hpp"
 
+eecs467::SensorModel::SensorModel() { }
+
 eecs467::SensorModel::SensorModel(const eecs467::OccupancyGrid& map) {
+	_map = map;
+}
+
+void eecs467::SensorModel::pushMap(const eecs467::OccupancyGrid& map) {
 	_map = map;
 }
 
@@ -49,3 +55,9 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 		}
 	}
 }
+
+
+const eecs467::OccupancyGrid eecs467::SensorModel::getGrid() const {
+	return _map;
+}
+

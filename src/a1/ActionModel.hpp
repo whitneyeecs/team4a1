@@ -17,7 +17,14 @@ private:
 public:
 	ActionModel(float k1, float k2);
 
-	void apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t deltaTime);
+	/**
+	 * @brief applies action model to a pose
+	 * @param pose pose to apply action model to
+	 * @param deltaRight right wheel ticks
+	 * @param deltaLeft left wheel ticks
+	 * @param utime new time for the pose
+	 */
+	void apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t utime);
 };
 
 }

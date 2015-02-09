@@ -53,4 +53,7 @@ std::array<int32_t, 2> eecs467::VirtualOdometry::deltas(const std::array<int32_t
 	return ret;
 }
 
+int64_t eecs467::VirtualOdometry::getUtime() const {
+	return _currUtime;
+}
 

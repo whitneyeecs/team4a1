@@ -15,9 +15,10 @@ namespace eecs467 {
  * @param pose pose to advance
  * @param deltaRight number of ticks of right wheel since last pose
  * @param deltaLeft number of ticks of left wheel since last pose
+ * @param utime of new pose
  * @return new pose
  */
-maebot_pose_t advanceState(const maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t deltaTime);
+maebot_pose_t advanceState(const maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t utime);
 
 }
 

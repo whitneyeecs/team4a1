@@ -11,9 +11,9 @@ eecs467::ActionModel::ActionModel(float k1, float k2)
 	_rand = gslu_rand_rng_alloc();		
 }
 
-void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t deltaTime) {
+void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t utime) {
 	maebot_pose_t nextPose = eecs467::advanceState(pose,
-		deltaRight, deltaLeft, deltaTime);
+		deltaRight, deltaLeft, utime);
 
 	float deltaX = nextPose.x - pose.x;
 	float deltaY = nextPose.y - pose.y;

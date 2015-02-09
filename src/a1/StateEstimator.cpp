@@ -3,7 +3,7 @@
 #include "math/angle_functions.hpp"
 #include "RobotConstants.hpp"
 
-maebot_pose_t eecs467::advanceState(const maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t deltaTime) {
+maebot_pose_t eecs467::advanceState(const maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t utime) {
 	maebot_pose_t newPose;
 
 	float distance = eecs467::metersPerTick * 
@@ -15,7 +15,7 @@ maebot_pose_t eecs467::advanceState(const maebot_pose_t& pose, int32_t deltaRigh
 	newPose.x = pose.x + distance * cos(pose.theta + alpha);
 	newPose.y = pose.y + distance * sin(pose.theta + alpha);
 	newPose.theta = angle_sum(pose.theta, theta);
-	newPose.utime = pose.utime + deltaTime;
+	newPose.utime = utime;
 	return newPose;
 }
 

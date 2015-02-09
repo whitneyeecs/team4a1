@@ -83,6 +83,8 @@ public:
 	 * @return deltas, index 0 is right wheel, index 1 is left wheel
 	 */
 	std::array<int32_t, 2> deltas(const std::array<int32_t, 2>& odo) const;
+
+	int64_t getUtime() const;
 };
 
 }

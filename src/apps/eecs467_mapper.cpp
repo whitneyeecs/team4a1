@@ -59,7 +59,7 @@ private:
 	void handleLaserMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_laser_scan_t* msg) {
-	
+		// std::cout << "laser" << std::endl;
 		pthread_mutex_lock(&dataMutex);
 // printf("recieved laser scan\n");
 		laser.pushNewScans(*msg);
@@ -68,6 +68,7 @@ private:
 			pf.pushScan(*msg);
 		}
 		pthread_mutex_unlock(&dataMutex);
+		// std::cout << "laser done" << std::endl;
 	}
 
 	void handleMotorFeedbackMessage(const lcm::ReceiveBuffer* rbuf,
