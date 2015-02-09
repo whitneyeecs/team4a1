@@ -53,6 +53,8 @@ public:
 	 */
 	void process();
 
+	void pf_process(maebot_laser_scan_t* msg);
+
 	void clearPoses();
 
 	void clearScans();

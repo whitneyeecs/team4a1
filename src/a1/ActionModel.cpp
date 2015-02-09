@@ -27,5 +27,5 @@ void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_
 	pose.x += (deltaS + e2)* cos(pose.theta + alpha + e1);
 	pose.y += (deltaS + e2)* sin(pose.theta + alpha + e1);
 	pose.theta += deltaTheta + e1 + e3;
-	pose.utime = nextPose.utime;
+//	pose.utime = nextPose.utime;
 }

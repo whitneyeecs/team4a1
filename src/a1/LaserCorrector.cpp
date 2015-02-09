@@ -22,6 +22,68 @@ void eecs467::LaserCorrector::pushNewPose(const maebot_pose_t& pose) {
 	// printf("pushed pose: %ld\n", pose.utime);
 }
 
+void eecs467::LaserCorrector::pf_process(maebot_laser_scan_t* msg) {
+
+
+	// process until scansToProcess is empty
+	for(int i  = 0; i < msg->num_ranges; ++i) {
+		// the laser scan with the smallest timestamp still unprocessed
+		SingleLaser laser = {
+				msg->ranges[i],
+				msg->thetas[i],
+				msg->times[i],
+				msg->intensities[i], 0, 0
+		};
+
+		maebot_pose_t oldest;
+		// after this loop poses.front() should contain the first 
+		// pose that has a greater time stamp or will become empty
+		while(!_poses.empty() 
+			&& (_poses.front().utime < laser.utime)) {
+			oldest = _poses.front();
+			_poses.pop_front();
+		}
+
+		// if all poses are used up, we will have to wait for more
+		// pop last one back on and return false
+		if (_poses.empty()) {
+			_poses.push_front(oldest);
+			return;
+		}
+ 		
+ 		float delta_theta = _poses.front().theta - oldest.theta;
+// 		if (delta_theta > 2) {
+//printf("Turning too fast\n");
+ 			// we are turning too fast or somethings gone wrong with the pose
+//			_scansToProcess.clear();
+			// _poses.clear();
+ //			return;
+// 		}
+
+		// interpolate the position of the vehicle for the scan
+		float scaling = (float) (laser.utime - oldest.utime) /
+			(float) (_poses.front().utime - oldest.utime);
+		float poseX = oldest.x + scaling * (_poses.front().x - oldest.x);
+		float poseY = oldest.y + scaling * (_poses.front().y - oldest.y);
+		float poseTheta = oldest.theta + scaling * (_poses.front().theta - oldest.theta);
+
+		// push processed scan into current message
+		_processedScans.ranges.push_back(laser.range);
+		_processedScans.thetas.push_back(angle_sum(poseTheta,
+			laserThetaToMaebotTheta(laser.theta)));
+		_processedScans.times.push_back(laser.utime);
+		_processedScans.intensities.push_back(laser.intensity);
+		_processedScans.x_pos.push_back(poseX);
+		_processedScans.y_pos.push_back(poseY);
+
+		// push older pose back on
+//		_poses.push_front(oldest);
+
+		// pop recently processed scan
+//		_scansToProcess.pop_front();
+	}
+}
+
 void eecs467::LaserCorrector::process() {
 	// if there are no scans to process return false
 	if (_scansToProcess.empty()) {
