@@ -10,13 +10,17 @@
 
 // c++
 #include <vector>
-#include "a1/StateEstimator.hpp"
+//#include "a1/StateEstimator.hpp"
 
 // lcm
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/maebot_occupancy_grid_t.hpp>
 #include <lcmtypes/maebot_map_data_t.hpp>
 #include "mapping/occupancy_grid.hpp"
+//#include "lcmtypes/maebot_pose_t.hpp"
+#include "lcmtypes/maebot_particle_map_t.hpp"
+//#include "lcmtypes/maebot_particle_t.hpp"
+#include "a1/ParticleFilter.hpp"
 
 // core api
 #include "vx/vx.h"
@@ -43,7 +47,7 @@ public:
 	eecs467::OccupancyGrid grid;
 	image_u8_t* im;
 	std::vector<float> path;
-	std::vector<float> lidar_rays;
+//	std::vector<float> lidar_rays;
 	pthread_mutex_t renderMutex;
 
 	// lcm
@@ -85,7 +89,7 @@ public:
 
 		im = nullptr;
 
-		lcm.subscribe("MAEBOT_MAP_DATA", &StateHandler::handleLcmMessage, this);
+		lcm.subscribe("MAEBOT_PARTICLE_MAP", &StateHandler::handleLcmMessage, this);
 
 	}
 
@@ -97,7 +101,7 @@ public:
 
 	void handleLcmMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
-		const maebot_map_data_t* msg) {
+		const maebot_particle_map_t* msg) {
 		
 		pthread_mutex_lock(&renderMutex);
 		grid.fromLCM(msg->grid);
@@ -113,24 +117,25 @@ public:
 		}
 
 		unsigned int i = 0;
-		if (path.size() == 0 && msg->path_num != 0) {
-			path.push_back(msg->path_x[i]);
-			path.push_back(msg->path_y[i]);
+		if (path.size() == 0 && msg->num_particles != 0) {
+			path.push_back(msg->particles[i].pose.y);
+			path.push_back(msg->particles[i].pose.x);
 			path.push_back(0.0f);
 			i++;
 		}
 
-		for ( ; i < msg->path_x.size(); ++i) {
-			path.push_back(msg->path_x[i]);
-			path.push_back(msg->path_y[i]);
+		for ( ; i < msg->particles.size(); ++i) {
+			path.push_back(msg->particles[i].pose.y);
+			path.push_back(msg->particles[i].pose.x);
+			path.push_back(0.0f);
+			
+			path.push_back(msg->particles[i].pose.y);
+			path.push_back(msg->particles[i].pose.x);
 			path.push_back(0.0f);
 
-			path.push_back(msg->path_x[i]);
-			path.push_back(msg->path_y[i]);
-			path.push_back(0.0f);
 		}
 
-
+/*
 		lidar_rays.clear();
 		for (int i = 0; i < msg->scan.num_ranges; ++i) {
 			lidar_rays.push_back(msg->scan.x_pos[i]);
@@ -145,7 +150,7 @@ public:
 			lidar_rays.push_back(y_end);
 			lidar_rays.push_back(0);	
 		}
-
+*/
 		pthread_mutex_unlock(&renderMutex);
 	}
 
@@ -215,17 +220,17 @@ private:
 				int vec_size = state->path.size();
 				vx_resc_t* verts = vx_resc_copyf((state->path).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
-					vxo_lines(verts, vec_size / 3, GL_LINES, vxo_lines_style(vx_red, 2.0f)));
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_red, 2.0f)));
 			}
 
-			if (state->lidar_rays.size() != 0) {
+/*			if (state->lidar_rays.size() != 0) {
 				int vec_size = state->lidar_rays.size();
 				vx_resc_t* verts = vx_resc_copyf((state->lidar_rays).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
 					vxo_lines(verts, vec_size / 3, GL_LINES,
 						vxo_lines_style(vx_green, 2.0f)));
 			}
-
+*/
 			pthread_mutex_unlock(&state->renderMutex);
 			
 			vx_buffer_swap(vx_world_get_buffer(state->vxworld, "state"));

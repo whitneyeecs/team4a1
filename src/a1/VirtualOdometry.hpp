@@ -17,6 +17,10 @@ private:
 	int32_t _currLeftTick;
 	int64_t _currUtime;
 
+	int32_t _realRightTick;
+	int32_t _realLeftTick;
+	int64_t _realUtime;
+
 public:
 	VirtualOdometry(int32_t rightTick = 0, int32_t leftTick = 0, int64_t utime = -1);
 
@@ -29,6 +33,12 @@ public:
 	int32_t getDeltaRight() const;
 
 	int32_t getDeltaLeft() const;
+
+	int64_t getUtime() const;
+
+	int32_t getRightTicks() const;
+
+	int32_t getLeftTicks() const;
 };
 
 }

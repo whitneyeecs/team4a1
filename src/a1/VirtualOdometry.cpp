@@ -2,12 +2,21 @@
 
 eecs467::VirtualOdometry::VirtualOdometry(int32_t rightTick, int32_t leftTick, int64_t utime) :
 	_lastRightTick(rightTick), _lastLeftTick(leftTick), _lastUtime(utime),
-	_currRightTick(rightTick), _currLeftTick(leftTick), _currUtime(utime) { }
+	_currRightTick(rightTick), _currLeftTick(leftTick), _currUtime(utime),
+	_realRightTick(rightTick), _realLeftTick(leftTick), _realUtime(utime) { }
 
 void eecs467::VirtualOdometry::setOdometry(int32_t rightTick, int32_t leftTick, int64_t utime) {
+	_lastRightTick = rightTick;
+	_lastLeftTick = leftTick;
+	_lastUtime = utime;
+
 	_currRightTick = rightTick;
 	_currLeftTick = leftTick;
 	_currUtime = utime;
+
+	_realRightTick = rightTick;
+	_realLeftTick = leftTick;
+	_realUtime = utime;	
 }
 
 void eecs467::VirtualOdometry::update(int32_t rightTick, int32_t leftTick, int64_t utime, int64_t measuredUtime) {
@@ -15,10 +24,14 @@ void eecs467::VirtualOdometry::update(int32_t rightTick, int32_t leftTick, int64
 	_lastLeftTick = _currLeftTick;
 	_lastUtime = _currUtime;
 
-	float scaling = (measuredUtime - _currUtime) / (utime - _currUtime);
-	_currRightTick += scaling * (float)(rightTick - _currRightTick);
-	_currLeftTick += scaling * (float)(leftTick - _currLeftTick);
+	float scaling = (float) (measuredUtime - _realUtime) / (float) (utime - _realUtime);
+	_currRightTick = _realRightTick + scaling * (float)(rightTick - _realRightTick);
+	_currLeftTick = _realRightTick + scaling * (float)(leftTick - _realLeftTick);
 	_currUtime = measuredUtime;
+
+	_realRightTick = rightTick;
+	_realLeftTick = leftTick;
+	_realUtime = utime;
 }
 
 void eecs467::VirtualOdometry::update(const maebot_motor_feedback_t& msg, int64_t measuredUtime) {
@@ -32,4 +45,16 @@ int32_t eecs467::VirtualOdometry::getDeltaRight() const {
 
 int32_t eecs467::VirtualOdometry::getDeltaLeft() const {
 	return _currLeftTick - _lastLeftTick;
+}
+
+int64_t eecs467::VirtualOdometry::getUtime() const {
+	return _currUtime;
+}
+
+int32_t eecs467::VirtualOdometry::getRightTicks() const {
+	return _currRightTick;
+}
+
+int32_t eecs467::VirtualOdometry::getLeftTicks() const {
+	return _currLeftTick;
 }
