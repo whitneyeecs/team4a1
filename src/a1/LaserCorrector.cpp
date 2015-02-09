@@ -22,6 +22,35 @@ void eecs467::LaserCorrector::pushNewPose(const maebot_pose_t& pose) {
 	// printf("pushed pose: %ld\n", pose.utime);
 }
 
+maebot_processed_laser_scan_t eecs467::LaserCorrector::single_scan_process(const maebot_laser_scan_t* msg,
+	const maebot_pose_t& begin, const maebot_pose_t& end) {
+
+	maebot_processed_laser_scan_t single_scan;
+
+	// process until scansToProcess is empty
+	for(int i  = 0; i < msg->num_ranges; ++i) {
+		// interpolate the position of the vehicle for the scan
+		
+		float scaling = (float) (msg->utime - begin.utime) /
+			(float) (end.utime - begin.utime);
+		float poseX = begin.x + scaling * (end.x - begin.x);
+		float poseY = begin.y + scaling * (end.y - begin.y);
+		float poseTheta = begin.theta + scaling * (end.theta - begin.theta);
+
+		single_scan.ranges.push_back(msg->ranges[i]);
+		single_scan.thetas.push_back(angle_sum(poseTheta, 
+									laserThetaToMaebotTheta(msg->thetas[i])));
+		single_scan.times.push_back(msg->times[i]);
+		single_scan.intensities.push_back(msg->intensities[i]);
+		single_scan.x_pos.push_back(poseX);
+		single_scan.y_pos.push_back(poseY);	
+	}
+
+	return single_scan;
+
+}
+
+
 void eecs467::LaserCorrector::pf_process(maebot_laser_scan_t* msg) {
 
 

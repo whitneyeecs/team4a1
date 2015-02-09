@@ -12,10 +12,10 @@
 #include <vector>
 #include "a1/StateEstimator.hpp"
 #include <algorithm>
-#include <iostream>
+#include <fstream>
 
 // lcm
-#include <lcm/lcm-cpp.hpp>about:startpage
+#include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/maebot_occupancy_grid_t.hpp>
 #include <lcmtypes/maebot_map_data_t.hpp>
 #include "mapping/occupancy_grid.hpp"
@@ -180,12 +180,11 @@ public:
 		}
 
 		//calucate error between true_path and est_path
-		int loop = min(true_path.size(), est_path.size());
-		ofstream file;
-		file.open ("~/team4a1/eecs467/data/a1_error.csv", ios::out);
+		int loop = std::min(true_path.size(), est_path.size());
+		std::ofstream file;
+		file.open ("~/team4a1/eecs467/data/a1_error.csv", std::ios::out);
 
-		unsigned int i = 0;
-		for ( ; i < loop; i++){
+		for (unsigned int i = 0; i < loop; i++){
 			file << abs(true_path[i] - est_path[i]); // x
 			file << abs(true_path[++i] - est_path[++i]); // y
 			file << (msg->utime - subtime)/1000000; // time
