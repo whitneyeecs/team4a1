@@ -11,9 +11,11 @@
 // c++
 #include <vector>
 #include "a1/StateEstimator.hpp"
+#include <algorithm>
+#include <iostream>
 
 // lcm
-#include <lcm/lcm-cpp.hpp>
+#include <lcm/lcm-cpp.hpp>about:startpage
 #include <lcmtypes/maebot_occupancy_grid_t.hpp>
 #include <lcmtypes/maebot_map_data_t.hpp>
 #include "mapping/occupancy_grid.hpp"
@@ -55,6 +57,7 @@ public:
 
 	//error
 	std::vector<float> error;
+	float subtime;
 
 	pthread_mutex_t renderMutex;
 
@@ -149,12 +152,12 @@ public:
 			}
 		}
 
+		if(true_path.size() == 0) { subtime = msg->utime; } //save initial time
+
 		//add most likely pose to path
-		if(msg->num_particles != 0){
-			est_path.push_back(msg->particles[1].pose.x);
-			est_path.push_back(msg->particles[1].pose.y);
-			est_path.push_back(0.0f);
-		}
+		est_path.push_back(msg->particles[0].pose.x);
+		est_path.push_back(msg->particles[0].pose.y);
+		est_path.push_back(0.0f);
 
 		//particle map
 		particle_map.clear(); 
@@ -177,7 +180,17 @@ public:
 		}
 
 		//calucate error between true_path and est_path
+		int loop = min(true_path.size(), est_path.size());
+		ofstream file;
+		file.open ("~/team4a1/eecs467/data/a1_error.csv", ios::out);
 
+		unsigned int i = 0;
+		for ( ; i < loop; i++){
+			file << abs(true_path[i] - est_path[i]); // x
+			file << abs(true_path[++i] - est_path[++i]); // y
+			file << (msg->utime - subtime)/1000000; // time
+		}
+		
 		pthread_mutex_unlock(&renderMutex);
 	}
 		
