@@ -23,7 +23,7 @@ void eecs467::LaserCorrector::pushNewPose(const maebot_pose_t& pose) {
 }
 
 maebot_processed_laser_scan_t 
-	eecs467::LaserCorrector::single_scan_process(const maebot_laser_scan_t& msg,
+	eecs467::LaserCorrector::processSingleScan(const maebot_laser_scan_t& msg,
 		const maebot_pose_t& begin,
 		const maebot_pose_t& end) {
 

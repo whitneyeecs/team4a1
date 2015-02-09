@@ -53,7 +53,7 @@ public:
 	 */
 	void process();
 
-	maebot_processed_laser_scan_t single_scan_process(const maebot_laser_scan_t& msg,
+	maebot_processed_laser_scan_t processSingleScan(const maebot_laser_scan_t& msg,
 		const maebot_pose_t& begin,
 		const maebot_pose_t& end);
 
@@ -62,14 +62,6 @@ public:
 	void clearPoses();
 
 	void clearScans();
-
-	/**
-	 * @brief does the same thing as process however it will not
-	 * clear the scans after it's processed it (so when this is
-	 * called again it will be processing the same scans);
-	 * @details [long description]
-	 */
-	void processSaveScans();
 
 	/**
 	 * @brief fills an lcm msg with corrected scans
