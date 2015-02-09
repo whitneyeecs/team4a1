@@ -184,9 +184,10 @@ public:
 		std::ofstream file;
 		file.open ("~/team4a1/eecs467/data/a1_error.csv", std::ios::out);
 
-		for (unsigned int i = 0; i < loop; i++){
+		for (int i = 0; i < loop; i++){
 			file << abs(true_path[i] - est_path[i]); // x
-			file << abs(true_path[++i] - est_path[++i]); // y
+			i++;
+			file << abs(true_path[i] - est_path[i]); // y
 			file << (msg->utime - subtime)/1000000; // time
 		}
 		
