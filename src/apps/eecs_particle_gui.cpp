@@ -48,7 +48,7 @@ public:
 	image_u8_t* im;
 	std::vector<float> path;
 	std::vector<float> prob_path;
-//	std::vector<float> lidar_rays;
+	std::vector<float> pose_path;
 	pthread_mutex_t renderMutex;
 
 	// lcm
@@ -90,6 +90,8 @@ public:
 
 		im = nullptr;
 
+		lcm.subscribe("MAEBOT_POSE", &StateHandler::handleLcmMessagePose, this);
+
 		lcm.subscribe("MAEBOT_PARTICLE_MAP", &StateHandler::handleLcmMessage, this);
 
 	}
@@ -98,6 +100,32 @@ public:
 		if (im != nullptr) {
 			image_u8_destroy(im);
 		}
+	}
+	
+	void handleLcmMessagePose(const lcm::ReceiveBuffer* rbuf,
+		const std::string& chan, 
+		const maebot_pose_t* msg) {
+		
+		pthread_mutex_lock(&renderMutex);
+/*		grid.fromLCM(msg->grid);
+		// assume grid sizes never change
+		if (im == nullptr) {
+			im = image_u8_create(grid.widthInCells(), grid.heightInCells());
+		}
+
+		for (unsigned int i = 0; i < grid.heightInCells(); ++i){
+			for (unsigned int j = 0; j < grid.widthInCells(); ++j) {
+				im->buf[i * im->stride + j] = (uint8_t) (-grid(i, j) + 127);
+			}
+		}
+*/		
+	
+	
+			pose_path.push_back(msg->x);
+			pose_path.push_back(msg->y);
+			pose_path.push_back(0.0f);
+
+		pthread_mutex_unlock(&renderMutex);
 	}
 
 	void handleLcmMessage(const lcm::ReceiveBuffer* rbuf,
@@ -118,8 +146,8 @@ public:
 		}
 		
 	
-		prob_path.push_back(msg->particles[0].pose.y);
 		prob_path.push_back(msg->particles[0].pose.x);
+		prob_path.push_back(msg->particles[0].pose.y);
 		prob_path.push_back(0.0f);
 	
 		path.clear();
@@ -141,23 +169,8 @@ public:
 			path.push_back(0.0f);
 
 		}
+		
 
-/*
-		lidar_rays.clear();
-		for (int i = 0; i < msg->scan.num_ranges; ++i) {
-			lidar_rays.push_back(msg->scan.x_pos[i]);
-			lidar_rays.push_back(msg->scan.y_pos[i]);
-			lidar_rays.push_back(0);
-
-			float x_end = msg->scan.x_pos[i] + 
-				msg->scan.ranges[i] * cos(msg->scan.thetas[i]);
-			float y_end = msg->scan.y_pos[i] + 
-				msg->scan.ranges[i] * sin(msg->scan.thetas[i]);
-			lidar_rays.push_back(x_end);
-			lidar_rays.push_back(y_end);
-			lidar_rays.push_back(0);	
-		}
-*/
 		pthread_mutex_unlock(&renderMutex);
 	}
 
@@ -235,6 +248,13 @@ private:
 				vx_resc_t* verts = vx_resc_copyf((state->prob_path).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
 					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_green, 2.0f)));
+			}
+
+			if (state->pose_path.size() != 0) {
+				int vec_size = state->pose_path.size();
+				vx_resc_t* verts = vx_resc_copyf((state->pose_path).data(), vec_size);
+				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_blue, 2.0f)));
 			}
 
 
