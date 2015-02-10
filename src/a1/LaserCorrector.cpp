@@ -44,15 +44,14 @@ maebot_processed_laser_scan_t
 		float tmptheta = scaling * angle_diff(endtheta, begintheta);
 		float poseTheta = angle_sum(begintheta, tmptheta);
 
-		single_scan.ranges.push_back(msg.ranges[i]);
-
 		tmptheta = wrap_to_pi(laserThetaToMaebotTheta(msg.thetas[i]));
 		tmptheta = angle_sum(poseTheta, tmptheta);
-		_processedScans.thetas.push_back(tmptheta);
 
+		single_scan.num_ranges = msg.num_ranges;
+		single_scan.ranges.push_back(msg.ranges[i]);
+		single_scan.thetas.push_back(tmptheta);
 		single_scan.times.push_back(msg.times[i]);
 		single_scan.intensities.push_back(msg.intensities[i]);
-
 		single_scan.x_pos.push_back(poseX);
 		single_scan.y_pos.push_back(poseY);	
 	}

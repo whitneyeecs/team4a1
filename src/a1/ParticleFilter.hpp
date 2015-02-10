@@ -37,7 +37,6 @@ private:
 	bool _hasScan;
 	
 	maebot_laser_scan_t _scan;
-	maebot_laser_scan_t* _scan_to_process;
 	maebot_particle_map_t _particle_map;
 
 	std::vector<maebot_particle_t> _prior;

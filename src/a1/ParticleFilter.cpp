@@ -34,7 +34,6 @@ void eecs467::ParticleFilter::init(const maebot_motor_feedback_t* msg){
 	for (int i = 0; i < eecs467::numParticles; ++i) {
 		_prior.push_back(particle);
 	}
-	printf("prior size: %ld\n", _prior.size());
 
 	_odo.set(*msg);
 }
@@ -102,7 +101,6 @@ void eecs467::ParticleFilter::normalizeAndSort(){
 
 maebot_particle_map_t
 eecs467::ParticleFilter::toLCM(){
-	
 	maebot_particle_map_t msg;
 	msg.utime = _prior.front().pose.utime;
 	msg.grid = _sensorModel.getGrid().toLCM();
@@ -114,9 +112,7 @@ eecs467::ParticleFilter::toLCM(){
 void eecs467::ParticleFilter::process() {
 	_processing = true;
 
-printf("process\n");
 	drawRandomSamples();
-printf("size: %ld\n", _random_samples.size());
 	int64_t laserTime = _scan.times[_scan.num_ranges - 1];
 	std::array<int32_t, 2> interpolate = _odo.interpolate(laserTime);
 	std::array<int32_t, 2> deltas = _odo.deltas(interpolate);
@@ -124,10 +120,8 @@ printf("size: %ld\n", _random_samples.size());
 
 	for (auto& particle : _random_samples) {
 		maebot_pose_t oldPose = particle.pose;
-printf("before: %f, %f, %f\n", oldPose.x, oldPose.y, oldPose.theta);
 		_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime);
-printf("after: %f, %f, %f\n", particle.pose.x, particle.pose.y, particle.pose.theta);
-		// _sensorModel.apply(particle, _scan, oldPose);
+		_sensorModel.apply(particle, _scan, oldPose);
 	}
 
 	normalizeAndSort();
