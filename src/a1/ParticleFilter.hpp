@@ -42,7 +42,6 @@ private:
 
 	std::vector<maebot_particle_t> _prior;
 	std::vector<maebot_particle_t> _random_samples;
-	std::vector<maebot_particle_t> _post_action;
 
 public:
 	typedef struct ParticleComp{
@@ -86,8 +85,6 @@ public:
 	maebot_particle_map_t toLCM();
 
 	void process();
-
-	void actionModel(maebot_pose_t& pose, int32_t delta_l, int32_t delta_r);
 
 	bool processing(){ return _processing; }
 

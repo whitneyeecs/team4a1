@@ -24,8 +24,7 @@ void eecs467::ParticleFilter::pushMap(
 
 void eecs467::ParticleFilter::init(const maebot_motor_feedback_t* msg){
 	_prior.reserve(eecs467::numParticles);
-	_random_samples.reserve(eecs467::numParticles);
-	_post_action.reserve(eecs467::numParticles);
+	_random_samples.resize(eecs467::numParticles);
 
 	maebot_particle_t particle;
 	particle.pose.x = 0;
@@ -35,6 +34,7 @@ void eecs467::ParticleFilter::init(const maebot_motor_feedback_t* msg){
 	for (int i = 0; i < eecs467::numParticles; ++i) {
 		_prior.push_back(particle);
 	}
+	printf("prior size: %ld\n", _prior.size());
 
 	_odo.set(*msg);
 }
