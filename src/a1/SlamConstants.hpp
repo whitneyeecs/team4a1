@@ -3,7 +3,7 @@
 
 namespace eecs467 {
 
-static const int numParticles = 1000;
+static const int numParticles = 30;
 
 static const int emptyEvidenceStrength = 2;
 static const int occupiedEvidenceStrength = 1;

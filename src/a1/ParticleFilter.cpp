@@ -12,6 +12,7 @@
 
 eecs467::ParticleFilter::ParticleFilter() :
 	_actionModel(eecs467::actionModelK1, eecs467::actionModelK2),
+//	_actionModel(0.0, 0.0),
 	_hasMap(false), _processing(false), _hasScan(false) { }
 
 eecs467::ParticleFilter::ParticleComp sort;
@@ -30,6 +31,8 @@ void eecs467::ParticleFilter::init(const maebot_motor_feedback_t* msg){
 	particle.pose.x = 0;
 	particle.pose.y = 0;
 	particle.pose.theta = 0;
+	particle.prob = 1.0/eecs467::numParticles;
+printf("initialized prob: %f\n", particle.prob);
 
 	for (int i = 0; i < eecs467::numParticles; ++i) {
 		_prior.push_back(particle);
@@ -58,18 +61,18 @@ void eecs467::ParticleFilter::drawRandomSamples(){
 	for(int i = 0; i < eecs467::numParticles; ++i){
 		target = gslu_rand_uniform(r);
 
-//printf("target is: %f\n\n", target);
+printf("target is: %f\n", target);
 
 		for( ; weight < target && j < eecs467::numParticles; ++j){
 			weight += _prior[j].prob;
 		}
 		if(j >= eecs467::numParticles)
 				--j;
-//printf("adding sample #: %i\n", i);
+printf("drawing from #: %i\n\n", j);
 		_random_samples[i] = _prior[j];
 		j = 0;
 		weight = 0.0;
-//		_random_samples[i].prob = 0.0;
+		_random_samples[i].prob = 0.0;
 	}
 }
 
