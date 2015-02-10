@@ -7,6 +7,9 @@
 *~*
 ~*
 
+src/lcmtypes/*.hpp
+src/lcmtypes/*.h
+src/lcmtypes/*.c
 bin
 
 *.swp
