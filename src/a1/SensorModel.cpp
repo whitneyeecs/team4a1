@@ -54,6 +54,7 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 			newProb -= 12;
 		}
 	}
+	particle.prob = newProb;
 }
 
 
