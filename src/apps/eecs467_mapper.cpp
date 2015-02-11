@@ -47,7 +47,7 @@ public:
 
 		lcm.subscribe("MAEBOT_LASER_SCAN", &StateHandler::handleLaserMessage, this);
 		lcm.subscribe("MAEBOT_MOTOR_FEEDBACK", &StateHandler::handleMotorFeedbackMessage, this);
-		lcm.subscribe("MAEBOT_POSE", &StateHandler::handlePoseMessage, this);
+//		lcm.subscribe("MAEBOT_POSE", &StateHandler::handlePoseMessage, this);
 	}
 
 	void launchThreads() {
@@ -79,14 +79,16 @@ private:
 			pf.pushMap(mapper.getGrid());
 			pf.pushOdometry(*msg);
 			pthread_mutex_unlock(&dataMutex);
-
-		pthread_mutex_lock(&dataMutex);
-		maebot_pose_t pose = pf.getBestPose();
-		laser.pushNewPose(pose);
-		path_x.push_back(pose.x);
-		path_y.push_back(pose.yy);
-		heading = pose.theta;
-		pthread_mutex_unlock(&dataMutex);
+		
+			if(pf.initialized()){
+				pthread_mutex_lock(&dataMutex);
+				maebot_pose_t pose = pf.getBestPose();
+				laser.pushNewPose(pose);
+				path_x.push_back(pose.x);
+				path_y.push_back(pose.y);
+				heading = pose.theta;
+				pthread_mutex_unlock(&dataMutex);
+			}
 
 
 			pthread_mutex_lock(&dataMutex);
@@ -149,7 +151,7 @@ printf("finished initialization\n");
 			if(pf.initialized()){
 				maebot_particle_map_t pf_msg = pf.toLCM();
 				state->lcm.publish("MAEBOT_PARTICLE_MAP", &pf_msg);
-exit(0);
+//exit(0);
 			}
 			pthread_mutex_unlock(&state->dataMutex);
 		}
