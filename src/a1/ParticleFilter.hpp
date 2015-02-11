@@ -57,7 +57,7 @@ public:
 	//
 	//pushes current map to be used with particle filter
 	//
-	void pushMap(const eecs467::OccupancyGrid& map);
+	void pushMap(const eecs467::OccupancyGrid* map);
 
 	//
 	//initializes prior particle vector with random poses
@@ -71,10 +71,6 @@ public:
 	void pushOdometry(const maebot_motor_feedback_t& odometry);
 
 	void pushScan(const maebot_laser_scan_t& scan);
-
-	void drawRandomSamples();
-
-	void normalizeAndSort();
 
 	bool readyToInit(){ return _hasMap; }
 
@@ -90,6 +86,13 @@ public:
 	bool processing(){ return _processing; }
 
 	maebot_pose_t getBestPose();
+
+	const maebot_laser_scan_t* getScan() const;
+
+private:
+	void drawRandomSamples();
+
+	void normalizeAndSort();
 
 }; //end class
 

@@ -47,7 +47,7 @@ public:
 
 		lcm.subscribe("MAEBOT_LASER_SCAN", &StateHandler::handleLaserMessage, this);
 		lcm.subscribe("MAEBOT_MOTOR_FEEDBACK", &StateHandler::handleMotorFeedbackMessage, this);
-//		lcm.subscribe("MAEBOT_POSE", &StateHandler::handlePoseMessage, this);
+		lcm.subscribe("MAEBOT_POSE", &StateHandler::handlePoseMessage, this);
 	}
 
 	void launchThreads() {
@@ -79,30 +79,21 @@ private:
 			pf.pushMap(mapper.getGrid());
 			pf.pushOdometry(*msg);
 			pthread_mutex_unlock(&dataMutex);
-		
-			if(pf.initialized()){
-				pthread_mutex_lock(&dataMutex);
-				maebot_pose_t pose = pf.getBestPose();
-				laser.pushNewPose(pose);
-				path_x.push_back(pose.x);
-				path_y.push_back(pose.y);
-				heading = pose.theta;
-				pthread_mutex_unlock(&dataMutex);
-			}
-
 
 			pthread_mutex_lock(&dataMutex);
 			if(pf.readyToInit() && !pf.initialized()){
 				pf.init(msg);
-printf("finished initialization\n");
+				printf("Initialized particle filter\n");
 			}
-			if(pf.readyToProcess())
+
+			if(pf.readyToProcess()) {
 				pf.process();
+			}
 
 			pthread_mutex_unlock(&dataMutex);
 	}
 
-/*	void handlePoseMessage(const lcm::ReceiveBuffer* rbuf,
+	void handlePoseMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_pose_t* msg) {
 
@@ -113,7 +104,7 @@ printf("finished initialization\n");
 		heading = msg->theta;
 		pthread_mutex_unlock(&dataMutex);
 	}
-*/
+
 	static void* processMapDataThread(void* arg) {
 		StateHandler* state = (StateHandler*) arg;
 		while (1) {
@@ -138,7 +129,7 @@ printf("finished initialization\n");
 			maebot_map_data_t msg;
 			msg.scan = message;
 			msg.utime = 0; // not used right now
-			msg.grid = state->mapper.getGrid().toLCM();
+			msg.grid = state->mapper.getGrid()->toLCM();
 			msg.path_num = state->path_x.size();
 			msg.path_x = state->path_x;
 			msg.path_y = state->path_y;
@@ -151,7 +142,6 @@ printf("finished initialization\n");
 			if(pf.initialized()){
 				maebot_particle_map_t pf_msg = pf.toLCM();
 				state->lcm.publish("MAEBOT_PARTICLE_MAP", &pf_msg);
-//exit(0);
 			}
 			pthread_mutex_unlock(&state->dataMutex);
 		}

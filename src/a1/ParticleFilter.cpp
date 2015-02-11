@@ -18,8 +18,7 @@ eecs467::ParticleFilter::ParticleFilter() :
 
 eecs467::ParticleFilter::ParticleComp sort;
 
-void eecs467::ParticleFilter::pushMap(
-	const eecs467::OccupancyGrid& map) { 
+void eecs467::ParticleFilter::pushMap(const eecs467::OccupancyGrid* map) { 
 	_sensorModel.pushMap(map);
 	_hasMap = true;
 }
@@ -118,7 +117,7 @@ maebot_particle_map_t
 eecs467::ParticleFilter::toLCM(){
 	maebot_particle_map_t msg;
 	msg.utime = _prior.front().pose.utime;
-	msg.grid = _sensorModel.getGrid().toLCM();
+	msg.grid = _sensorModel.getGrid()->toLCM();
 	msg.num_particles = (int32_t)_prior.size();
 	msg.particles = _prior;
 	return msg;
@@ -126,7 +125,7 @@ eecs467::ParticleFilter::toLCM(){
 
 void eecs467::ParticleFilter::process() {
 	_processing = true;
-
+	printf("process\n");
 	drawRandomSamples();
 	int64_t laserTime = _scan.times[_scan.num_ranges - 1];
 	std::array<int32_t, 2> interpolate = _odo.interpolate(laserTime);
@@ -147,13 +146,14 @@ void eecs467::ParticleFilter::process() {
 
 	_hasScan = false;
 	_processing = false;
+	printf("end process\n");
 };
-
-
 
 maebot_pose_t eecs467::ParticleFilter::getBestPose(){
 	return _prior.front().pose;
 }
 
-
+const maebot_laser_scan_t* eecs467::ParticleFilter::getScan() const {
+	return &_scan;
+}
 

@@ -18,7 +18,7 @@ public:
 
 	void update(const maebot_processed_laser_scan_t& scan);
 
-	const eecs467::OccupancyGrid& getGrid() const;
+	const eecs467::OccupancyGrid* getGrid() const;
 };
 
 }

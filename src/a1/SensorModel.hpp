@@ -14,15 +14,15 @@ namespace eecs467 {
 
 class SensorModel {
 private:
-	eecs467::OccupancyGrid _map;
+	const eecs467::OccupancyGrid* _map;
 	eecs467::LaserCorrector _laserCorrector;
 
 public:
 	SensorModel();
 
-	SensorModel(const eecs467::OccupancyGrid& map);
+	SensorModel(const eecs467::OccupancyGrid* map);
 
-	void pushMap(const eecs467::OccupancyGrid& map);
+	void pushMap(const eecs467::OccupancyGrid* map);
 
 	/**
 	 * @brief applies the sensor model to a particle
@@ -33,7 +33,7 @@ public:
 	 */
 	void apply(maebot_particle_t& particle, const maebot_laser_scan_t& scan, const maebot_pose_t& begin);
 
-	const eecs467::OccupancyGrid getGrid() const;
+	const eecs467::OccupancyGrid* getGrid() const;
 
 private:
 	void adjustProb(Point<float> point, float& prob,

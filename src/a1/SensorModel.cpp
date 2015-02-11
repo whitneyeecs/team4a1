@@ -7,11 +7,11 @@
 
 eecs467::SensorModel::SensorModel() { }
 
-eecs467::SensorModel::SensorModel(const eecs467::OccupancyGrid& map) {
-	_map = map;
+eecs467::SensorModel::SensorModel(const eecs467::OccupancyGrid* map) 
+	: _map(map) {
 }
 
-void eecs467::SensorModel::pushMap(const eecs467::OccupancyGrid& map) {
+void eecs467::SensorModel::pushMap(const eecs467::OccupancyGrid* map) {
 	_map = map;
 }
 
@@ -64,21 +64,21 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 			processedScans.ranges[i] * 
 			sin(processedScans.thetas[i]);
 
-		Point<int> cell = global_position_to_grid_cell(end, _map);
-		Point<int> origin = global_position_to_grid_cell(start, _map);
+		Point<int> cell = global_position_to_grid_cell(end, *_map);
+		Point<int> origin = global_position_to_grid_cell(start, *_map);
 
-		if(!_map.isCellInGrid(origin.x, origin.y)){
+		if(!_map->isCellInGrid(origin.x, origin.y)){
 			// our position is not in the grid
 			newProb -= 30;
 		}
 
-		if(!_map.isCellInGrid(cell.x, cell.y)) {
+		if(!_map->isCellInGrid(cell.x, cell.y)) {
 			// out of grid
 			newProb -= eecs467::sensorModelOutOfGrid;
-		} else if(_map.logOdds(cell.x, cell.y) > 120) {
+		} else if(_map->logOdds(cell.x, cell.y) > 120) {
 			// wall
 			newProb -= eecs467::sensorModelWall;
-		} else if(_map.logOdds(cell.x, cell.y) < -120) {
+		} else if(_map->logOdds(cell.x, cell.y) < -120) {
 			// open
 			newProb -= eecs467::sensorModelOpen;
 		} else {
@@ -89,20 +89,20 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 	particle.prob = newProb;
 }
 
-const eecs467::OccupancyGrid eecs467::SensorModel::getGrid() const {
+const eecs467::OccupancyGrid* eecs467::SensorModel::getGrid() const {
 	return _map;
 }
 
 void eecs467::SensorModel::adjustProb(Point<float> point, float& prob, float offGrid,
 	float wall, float empty, float unknown) const {
-	Point<int> cellPos = global_position_to_grid_cell(point, _map);
-	if (!_map.isCellInGrid(cellPos.y, cellPos.x)) {
+	Point<int> cellPos = global_position_to_grid_cell(point, *_map);
+	if (!_map->isCellInGrid(cellPos.y, cellPos.x)) {
 		// laser goes off grid
 		prob -= offGrid;
-	} else if (_map.logOdds(cellPos.x, cellPos.y) > 120) {
+	} else if (_map->logOdds(cellPos.x, cellPos.y) > 120) {
 		// wall
 		prob -= wall;
-	} else if (_map.logOdds(cellPos.x, cellPos.y) < -120) {
+	} else if (_map->logOdds(cellPos.x, cellPos.y) < -120) {
 		// empty
 		prob -= empty;
 	} else {

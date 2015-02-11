@@ -58,6 +58,6 @@ void eecs467::Mapper::update(const maebot_processed_laser_scan_t& scan) {
 	}
 }
 
-const eecs467::OccupancyGrid& eecs467::Mapper::getGrid() const {
-	return _grid;
+const eecs467::OccupancyGrid* eecs467::Mapper::getGrid() const {
+	return &_grid;
 }
