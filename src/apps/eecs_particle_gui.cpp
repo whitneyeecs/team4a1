@@ -143,9 +143,9 @@ public:
 			im = image_u8_create(grid.widthInCells(), grid.heightInCells());
 		}
 
-		for (unsigned int i = 0; i < grid.heightInCells(); ++i){
-			for (unsigned int j = 0; j < grid.widthInCells(); ++j) {
-				im->buf[i * im->stride + j] = (uint8_t) (-grid(i, j) + 127);
+		for (unsigned int y = 0; y < grid.heightInCells(); ++y){
+			for (unsigned int x = 0; x < grid.widthInCells(); ++x) {
+				im->buf[y * im->stride + x] = (uint8_t) (-grid(x, y) + 127);
 			}
 		}
 		

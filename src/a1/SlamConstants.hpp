@@ -11,6 +11,8 @@ static const int occupiedEvidenceStrength = 1;
 static const float actionModelK1 = 0.01;
 static const float actionModelK2 = 0.1;
 
+static const float sensorModelStepsPerLaser = 5;
+
 }
 
 #endif /* SLAM_CONSTANTS_HPP */

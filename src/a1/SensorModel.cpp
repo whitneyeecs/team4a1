@@ -19,7 +19,37 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 		_laserCorrector.processSingleScan(scan, begin, particle.pose);
 
 	float newProb = 0.0f;
-	Point<float> end, start;
+	Point<float> start;
+	Point<float> point, end;
+	// Point<int> cellPos;
+
+	// for (int i = 0; i < processedScans.num_ranges; ++i) {
+	// 	// points are in meters relative to where robot first started
+	// 	point.x = processedScans.x_pos[i];
+	// 	point.y = processedScans.y_pos[i];
+
+	// 	end.x = point.x + 
+	// 		processedScans.ranges[i] * 
+	// 		cos(processedScans.thetas[i]);
+	// 	end.y = point.y + 
+	// 		processedScans.ranges[i] * 
+	// 		sin(processedScans.thetas[i]);
+
+	// 	float stepX = (end.x - point.x) / eecs467::sensorModelStepsPerLaser;
+	// 	float stepY = (end.y - point.y) / eecs467::sensorModelStepsPerLaser;
+
+	// 	// last step is the end point
+	// 	for (int i = 0; i < steps - 1; ++i) {
+	// 		cellPos = global_position_to_grid_cell(start);
+	// 		if (!_map.isGridInCell(cellPos.y, cellPos.x)) {
+
+	// 		}
+
+	// 		point.x += stepX;
+	// 		point.y += stepY;
+	// 	}
+
+	// }
 
 	for (int i = 0; i < processedScans.num_ranges; ++i) {
 		start.x = processedScans.x_pos[i];

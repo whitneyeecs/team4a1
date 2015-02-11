@@ -29,15 +29,15 @@ void eecs467::Mapper::update(const maebot_processed_laser_scan_t& scan) {
 		for (int i = 0; i < steps; ++i) {
 			cellPos = global_position_to_grid_cell(point, _grid);
 			// update empty cells
-			if (!_grid.isCellInGrid(cellPos.y, cellPos.x)) {
+			if (!_grid.isCellInGrid(cellPos.x, cellPos.y)) {
 				break;
 			}
 
-			if (_grid(cellPos.y, cellPos.x) < -128 + 
+			if (_grid(cellPos.x, cellPos.y) < -128 + 
 				eecs467::emptyEvidenceStrength) {
-				_grid(cellPos.y, cellPos.x) = -128;
+				_grid(cellPos.x, cellPos.y) = -128;
 			} else {
-				_grid(cellPos.y, cellPos.x) -= eecs467::emptyEvidenceStrength;
+				_grid(cellPos.x, cellPos.y) -= eecs467::emptyEvidenceStrength;
 			}
 			point.x += deltaX;
 			point.y += deltaY;
@@ -46,14 +46,14 @@ void eecs467::Mapper::update(const maebot_processed_laser_scan_t& scan) {
 		point.x = scan.x_pos[i] + scan.ranges[i] * cos(scan.thetas[i]);
 		point.y = scan.y_pos[i] + scan.ranges[i] * sin(scan.thetas[i]);
 		cellPos = global_position_to_grid_cell(point, _grid);
-		if (!_grid.isCellInGrid(cellPos.y, cellPos.x)) {
+		if (!_grid.isCellInGrid(cellPos.x, cellPos.y)) {
 			return;
 		}
-		if (_grid(cellPos.y, cellPos.x) > 127 - 
+		if (_grid(cellPos.x, cellPos.y) > 127 - 
 			eecs467::occupiedEvidenceStrength) {		
-			_grid(cellPos.y, cellPos.x) = 127;
+			_grid(cellPos.x, cellPos.y) = 127;
 		} else {
-			_grid(cellPos.y, cellPos.x) += eecs467::occupiedEvidenceStrength;
+			_grid(cellPos.x, cellPos.y) += eecs467::occupiedEvidenceStrength;
 		}
 	}
 }
