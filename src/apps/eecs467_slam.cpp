@@ -18,20 +18,15 @@
 #include "a1/ParticleFilter.hpp"
 #include "a1/Mapper.hpp"
 
-eecs467::LaserCorrector laser;
-eecs467::ParticleFilter pf;
 
 class StateHandler {
 public:
+	eecs467::LaserCorrector laser;
+	eecs467::ParticleFilter pf;
 	eecs467::Mapper mapper;
-	float heading;
-	std::vector<float> path_x;
-	std::vector<float> path_y;
 	pthread_mutex_t dataMutex;
 
 	lcm::LCM lcm;
-	
-	pthread_t publish_map_data_pid;
 
 public:
 	StateHandler() : mapper(1, 5, 5, 0.05) {
@@ -49,10 +44,6 @@ public:
 		lcm.subscribe("MAEBOT_MOTOR_FEEDBACK", &StateHandler::handleMotorFeedbackMessage, this);
 
 		pf.pushMap(mapper.getGrid());
-	}
-
-	void launchThreads() {
-		// pthread_create(&publish_map_data_pid, NULL, &StateHandler::processMapDataThread, this);
 	}
 
 private:
@@ -80,7 +71,6 @@ private:
 
 		// if ready to process
 		if(pf.readyToProcess() && pf.initialized()) {
-			printf("process\n");
 			// get pose right now
 			maebot_pose_t oldPose = pf.getBestPose();
 
@@ -89,7 +79,7 @@ private:
 
 			// get pose after a move
 			maebot_pose_t newPose = pf.getBestPose();
-		
+
 			// get corrected laser scans
 			maebot_processed_laser_scan_t processedScans = laser.processSingleScan(*pf.getScan(), oldPose, newPose);
 
@@ -106,7 +96,6 @@ private:
 
 int main() {
 	StateHandler state;
-	state.launchThreads();
 
 	while(1) {
 		state.lcm.handle();

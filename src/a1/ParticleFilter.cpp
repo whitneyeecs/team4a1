@@ -125,7 +125,6 @@ eecs467::ParticleFilter::toLCM(){
 
 void eecs467::ParticleFilter::process() {
 	_processing = true;
-	printf("process\n");
 	drawRandomSamples();
 	int64_t laserTime = _scan.times[_scan.num_ranges - 1];
 	std::array<int32_t, 2> interpolate = _odo.interpolate(laserTime);
@@ -146,7 +145,6 @@ void eecs467::ParticleFilter::process() {
 
 	_hasScan = false;
 	_processing = false;
-	printf("end process\n");
 };
 
 maebot_pose_t eecs467::ParticleFilter::getBestPose(){
