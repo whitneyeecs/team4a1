@@ -18,8 +18,9 @@
 #include <lcmtypes/maebot_map_data_t.hpp>
 #include "mapping/occupancy_grid.hpp"
 #include "lcmtypes/maebot_pose_t.hpp"
+#include "lcmtypes/maebot_particle_map_t.hpp"
 #include "lcmtypes/maebot_particle_t.hpp"
-#include <lcmtypes/maebot_particle_map_t.hpp>
+#include "a1/ParticleFilter.hpp"
 
 // core api
 #include "vx/vx.h"
@@ -45,15 +46,10 @@ public:
 	// drawing stuff
 	eecs467::OccupancyGrid grid;
 	image_u8_t* im;
-	
-	//ground truth poses
-	std::vector<float> true_path;
+	std::vector<float> path;
+	std::vector<float> prob_path;
+	std::vector<float> pose_path;
 	std::vector<float> lidar_rays;
-
-	//localization
-	std::vector<float> est_path;
-	std::vector<float> particle_map;
-
 	pthread_mutex_t renderMutex;
 
 	// lcm
@@ -95,8 +91,9 @@ public:
 
 		im = nullptr;
 
-		lcm.subscribe("MAEBOT_MAP_DATA", &StateHandler::handle_pose_message, this);
-		lcm.subscribe("MAEBOT_PARTICLE_MAP", &StateHandler::handle_particle_message, this);
+		lcm.subscribe("MAEBOT_POSE", &StateHandler::handleLcmMessagePose, this);
+		lcm.subscribe("MAEBOT_PARTICLE_MAP", &StateHandler::handleLcmMessage, this);
+
 	}
 
 	~StateHandler() {
@@ -104,8 +101,8 @@ public:
 			image_u8_destroy(im);
 		}
 	}
-
-	void handle_pose_message(const lcm::ReceiveBuffer* rbuf,
+	
+	void handleLcmMessagePose(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_map_data_t* msg) {
 		
@@ -123,21 +120,21 @@ public:
 		}
 
 		unsigned int i = 0;
-		if (true_path.size() == 0 && msg->path_num != 0) {
-			true_path.push_back(msg->path_x[i]);
-			true_path.push_back(msg->path_y[i]);
-			true_path.push_back(0.0f);
+		if (pose_path.size() == 0 && msg->path_num != 0) {
+			pose_path.push_back(msg->path_x[i]);
+			pose_path.push_back(msg->path_y[i]);
+			pose_path.push_back(0.0f);
 			i++;
 		}
 
 		for ( ; i < msg->path_x.size(); ++i) {
-			true_path.push_back(msg->path_x[i]);
-			true_path.push_back(msg->path_y[i]);
-			true_path.push_back(0.0f);
+			pose_path.push_back(msg->path_x[i]);
+			pose_path.push_back(msg->path_y[i]);
+			pose_path.push_back(0.0f);
 
-			true_path.push_back(msg->path_x[i]);
-			true_path.push_back(msg->path_y[i]);
-			true_path.push_back(0.0f);
+			pose_path.push_back(msg->path_x[i]);
+			pose_path.push_back(msg->path_y[i]);
+			pose_path.push_back(0.0f);
 		}
 
 
@@ -159,8 +156,7 @@ public:
 		pthread_mutex_unlock(&renderMutex);
 	}
 
-
-	void handle_particle_message(const lcm::ReceiveBuffer* rbuf,
+	void handleLcmMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_particle_map_t* msg) {
 		
@@ -176,41 +172,38 @@ public:
 				im->buf[i * im->stride + j] = (uint8_t) (-grid(i, j) + 127);
 			}
 		}
-
-		//add most likely pose to path
-		if(msg->num_particles != 0){
-			est_path.push_back(msg->particles[1].pose.x);
-			est_path.push_back(msg->particles[1].pose.y);
-			est_path.push_back(0.0f);
-		}
-
-		//particle map
-		particle_map.clear(); 
+		
+	
+		prob_path.push_back(msg->particles[0].pose.x);
+		prob_path.push_back(msg->particles[0].pose.y);
+		prob_path.push_back(0.0f);
+	
+		path.clear();
 		unsigned int i = 0;
-		if (particle_map.size() == 0 && msg->num_particles != 0) {
-			particle_map.push_back(msg->particles[i].pose.x);
-			particle_map.push_back(msg->particles[i].pose.y);
-			particle_map.push_back(0.0f);
+		if (path.size() == 0 && msg->num_particles != 0) {
+			path.push_back(msg->particles[i].pose.x);
+			path.push_back(msg->particles[i].pose.y);
+			path.push_back(0.0f);
 			i++;
 		}
 
 		for ( ; i < msg->particles.size(); ++i) {
-			particle_map.push_back(msg->particles[i].pose.x);
-			particle_map.push_back(msg->particles[i].pose.y);
-			particle_map.push_back(0.0f);
+			path.push_back(msg->particles[i].pose.x);
+			path.push_back(msg->particles[i].pose.y);
+			path.push_back(0.0f);
+			
+			path.push_back(msg->particles[i].pose.x);
+			path.push_back(msg->particles[i].pose.y);
+			path.push_back(0.0f);
 
-			particle_map.push_back(msg->particles[i].pose.x);
-			particle_map.push_back(msg->particles[i].pose.y);
-			particle_map.push_back(0.0f);
-		}
+		}	
 
 		pthread_mutex_unlock(&renderMutex);
 	}
 
 	void launchThreads() {
-		// lcm handle threads
-		pthread_create(&lcm_pid, NULL, &StateHandler::pose_HandleThread, this);
-		pthread_create(&lcm_pid, NULL, &StateHandler::particle_HandleThread, this);
+		// lcm handle thread
+		pthread_create(&lcm_pid, NULL, &StateHandler::lcmHandleThread, this);
 
 		// render thread
 		pthread_create(&render_pid, NULL, &StateHandler::renderThread, this);
@@ -243,16 +236,7 @@ private:
 		pthread_mutex_unlock(&state->vxmutex);
 	}
 
-	static void* pose_HandleThread(void* arg) {
-		StateHandler* state = (StateHandler*) arg;
-
-		while(1) {
-			state->lcm.handle();
-		}
-		return NULL;
-	}
-
-	static void* particle_HandleThread(void* arg) {
+	static void* lcmHandleThread(void* arg) {
 		StateHandler* state = (StateHandler*) arg;
 
 		while(1) {
@@ -279,26 +263,28 @@ private:
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
 			}
 
-			if (state->true_path.size() != 0) {
-				int vec_size = state->true_path.size();
-				vx_resc_t* verts = vx_resc_copyf((state->true_path).data(), vec_size);
+			if (state->path.size() != 0) {
+				int vec_size = state->path.size();
+				vx_resc_t* verts = vx_resc_copyf((state->path).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
-				vxo_lines(verts, vec_size / 3, GL_LINES, vxo_lines_style(vx_black, 2.0f)));
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_blue, 2.0f)));
 			}
 
-			if (state->est_path.size() != 0) {
-				int vec_size = state->est_path.size();
-				vx_resc_t* verts = vx_resc_copyf((state->est_path).data(), vec_size);
+			if (state->prob_path.size() != 0) {
+				int vec_size = state->prob_path.size();
+				vx_resc_t* verts = vx_resc_copyf((state->prob_path).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
-				vxo_lines(verts, vec_size / 3, GL_LINES, vxo_lines_style(vx_red, 2.0f)));
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_red, 2.0f)));
 			}
 
-			if (state->particle_map.size() != 0) {
-				int vec_size = state->particle_map.size();
-				vx_resc_t* verts = vx_resc_copyf((state->particle_map).data(), vec_size);
+			if (state->pose_path.size() != 0) {
+				int vec_size = state->pose_path.size();
+				vx_resc_t* verts = vx_resc_copyf((state->pose_path).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
-				vxo_points(verts, vec_size / 3, vxo_points_style(vx_blue, 2.0f)));
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_black, 2.0f)));
 			}
+
+
 
 			if (state->lidar_rays.size() != 0) {
 				int vec_size = state->lidar_rays.size();

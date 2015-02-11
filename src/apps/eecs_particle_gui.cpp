@@ -11,6 +11,7 @@
 // c++
 #include <vector>
 //#include "a1/StateEstimator.hpp"
+#include <fstream>
 
 // lcm
 #include <lcm/lcm-cpp.hpp>
@@ -49,6 +50,10 @@ public:
 	std::vector<float> path;
 	std::vector<float> prob_path;
 	std::vector<float> pose_path;
+	float counter;
+	float init_time;
+	std::ofstream posefile;
+	std::ofstream probfile;
 	pthread_mutex_t renderMutex;
 
 	// lcm
@@ -72,6 +77,8 @@ public:
 		vxapp.impl = this;
 		vxapp.display_started = display_started;
 		vxapp.display_finished = display_finished;
+
+		counter = 0;
 
 		if (pthread_mutex_init(&vxmutex, NULL)) {
 			printf("state mutex not initialized\n");
@@ -106,25 +113,22 @@ public:
 		const std::string& chan, 
 		const maebot_pose_t* msg) {
 		
-		pthread_mutex_lock(&renderMutex);
-/*		grid.fromLCM(msg->grid);
-		// assume grid sizes never change
-		if (im == nullptr) {
-			im = image_u8_create(grid.widthInCells(), grid.heightInCells());
-		}
+		pthread_mutex_lock(&renderMutex);		
 
-		for (unsigned int i = 0; i < grid.heightInCells(); ++i){
-			for (unsigned int j = 0; j < grid.widthInCells(); ++j) {
-				im->buf[i * im->stride + j] = (uint8_t) (-grid(i, j) + 127);
-			}
-		}
-*/		
-	
-	
-			pose_path.push_back(msg->x);
-			pose_path.push_back(msg->y);
-			pose_path.push_back(0.0f);
+		//if(counter == 1)
+			//init_time = msg->utime;
 
+		if(pose_path.size() == 0)
+			posefile.open ("a1_pose_position.csv", std::ios::out);
+
+		pose_path.push_back(msg->x);
+		pose_path.push_back(msg->y);
+		pose_path.push_back(0.0f);
+
+		posefile << msg->x << " " << msg->y << " " << (msg->utime >> 9) << "\n"; 
+	
+		counter++;
+	
 		pthread_mutex_unlock(&renderMutex);
 	}
 
@@ -145,10 +149,14 @@ public:
 			}
 		}
 		
-	
+		if(prob_path.size() == 0)
+			probfile.open ("a1_prob_position.csv", std::ios::out);		
+
 		prob_path.push_back(msg->particles[0].pose.x);
 		prob_path.push_back(msg->particles[0].pose.y);
 		prob_path.push_back(0.0f);
+
+		probfile << msg->particles[0].pose.x << " " << msg->particles[0].pose.y << " " << (msg->particles[0].pose.utime >> 9) << "\n";
 	
 		path.clear();
 		unsigned int i = 0;
@@ -168,8 +176,7 @@ public:
 			path.push_back(msg->particles[i].pose.y);
 			path.push_back(0.0f);
 
-		}
-		
+		}		
 
 		pthread_mutex_unlock(&renderMutex);
 	}
@@ -225,7 +232,7 @@ private:
 			pthread_mutex_lock(&state->renderMutex);
 			
 			if (state->im != nullptr) {
-				// resize image from cells to meters
+				// resize image fromabout:startpage cells to meters
 				// then center it
 				eecs467::Point<float> origin = state->grid.originInGlobalFrame();
 				vx_object_t* vim = vxo_chain(
@@ -236,25 +243,26 @@ private:
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
 			}
 
+			//particles
 			if (state->path.size() != 0) {
 				int vec_size = state->path.size();
 				vx_resc_t* verts = vx_resc_copyf((state->path).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
-					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_red, 2.0f)));
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_blue, 2.0f)));
 			}
 
 			if (state->prob_path.size() != 0) {
 				int vec_size = state->prob_path.size();
 				vx_resc_t* verts = vx_resc_copyf((state->prob_path).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
-					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_green, 2.0f)));
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_red, 2.0f)));
 			}
 
 			if (state->pose_path.size() != 0) {
 				int vec_size = state->pose_path.size();
 				vx_resc_t* verts = vx_resc_copyf((state->pose_path).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
-					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_blue, 2.0f)));
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_black, 2.0f)));
 			}
 
 

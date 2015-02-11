@@ -41,7 +41,7 @@ void ActionModelTest() {
 	eecs467::ActionModel model(0.05, 0.05);
 
 	maebot_pose_t pose = { 0, 0, 0, 0 };
-	model.apply(pose, 100, 102, 1000);
+	model.apply(pose, 100, 102, 1000,1);
 	printf("%f, %f, %f, %ld\n", pose.x, pose.y, pose.theta, pose.utime);
 }
 

@@ -42,19 +42,22 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 
 		if(!_map.isCellInGrid(cell.x, cell.y)) {
 			// out of grid
-			newProb -= 14;
+			newProb -= 16;
 		} else if(_map.logOdds(cell.x, cell.y) > 120) {
 			// wall
-			newProb -= 4;
+			newProb -= 1;
 		} else if(_map.logOdds(cell.x, cell.y) < -120) {
 			// open
-			newProb -= 8;
+			newProb -= 6;
 		} else {
 			// unexplored
 			newProb -= 12;
 		}
 	}
 	particle.prob = newProb;
+	if(particle.prob != newProb)
+			exit(3);
+//printf("the new prob from sensor model: %f\n", particle.prob);
 }
 
 
