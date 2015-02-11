@@ -6,6 +6,7 @@
 *~
 *~*
 ~*
+*.jlp
 
 src/lcmtypes/*.hpp
 src/lcmtypes/*.h
