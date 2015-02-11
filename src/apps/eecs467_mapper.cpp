@@ -80,6 +80,15 @@ private:
 			pf.pushOdometry(*msg);
 			pthread_mutex_unlock(&dataMutex);
 
+		pthread_mutex_lock(&dataMutex);
+		maebot_pose_t pose = pf.getBestPose();
+		laser.pushNewPose(pose);
+		path_x.push_back(pose.x);
+		path_y.push_back(pose.yy);
+		heading = pose.theta;
+		pthread_mutex_unlock(&dataMutex);
+
+
 			pthread_mutex_lock(&dataMutex);
 			if(pf.readyToInit() && !pf.initialized()){
 				pf.init(msg);
@@ -91,7 +100,7 @@ printf("finished initialization\n");
 			pthread_mutex_unlock(&dataMutex);
 	}
 
-	void handlePoseMessage(const lcm::ReceiveBuffer* rbuf,
+/*	void handlePoseMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_pose_t* msg) {
 
@@ -102,7 +111,7 @@ printf("finished initialization\n");
 		heading = msg->theta;
 		pthread_mutex_unlock(&dataMutex);
 	}
-
+*/
 	static void* processMapDataThread(void* arg) {
 		StateHandler* state = (StateHandler*) arg;
 		while (1) {

@@ -89,6 +89,8 @@ public:
 
 	bool processing(){ return _processing; }
 
+	maebot_pose_t getBestPose();
+
 }; //end class
 
 }//end namespace

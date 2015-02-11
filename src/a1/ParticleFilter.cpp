@@ -151,7 +151,9 @@ void eecs467::ParticleFilter::process() {
 
 
 
-
+maebot_pose_t eecs467::ParticleFilter::getBestPose(){
+	return _prior.front().pose;
+}
 
 
 
