@@ -26,12 +26,31 @@ public:
 
 	/**
 	 * @brief applies the sensor model to a particle
-	 * @details particle needs to contain the pose of the maebot at the end of the laser scan
+	 * @details uses only the endpoints to determine probability
+	 * 
 	 * @param particle particle to apply sensor to
 	 * @param scan laser scan to apply
-	 * @param begin pose that the maebot was at when the scan began
+	 * @param beginPose pose that the maebot was at when the scan began
+	 * @param endPose pose that the maebot was at when the scan ended
 	 */
-	void apply(maebot_particle_t& particle, const maebot_laser_scan_t& scan, const maebot_pose_t& begin);
+	void applyEndPoints(maebot_particle_t& particle,
+		const maebot_laser_scan_t& scan,
+		const maebot_pose_t& beginPose,
+		const maebot_pose_t& endPose);
+
+	/**
+	 * @brief applies the sensor model to a particle
+	 * @details ray traces to find probability
+	 * 
+	 * @param particle particle to apply sensor to
+	 * @param scan laser scan to apply
+	 * @param beginPose pose that the maebot was at when the scan began
+	 * @param endPose pose that the maebot was at when the scan ended
+	 */
+	void applyRayTrace(maebot_particle_t& particle,
+		const maebot_laser_scan_t& scan,
+		const maebot_pose_t& beginPose,
+		const maebot_pose_t& endPose);
 
 	const eecs467::OccupancyGrid* getGrid() const;
 

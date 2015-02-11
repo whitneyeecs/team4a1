@@ -46,7 +46,8 @@ private:
 
 public:
 	typedef struct ParticleComp{
-		bool operator()(maebot_particle_t a, maebot_particle_t b) const{
+		bool operator()(maebot_particle_t a, 
+			maebot_particle_t b) const{
 			return a.prob > b.prob;
 		}
 	} ParticleComp;
@@ -70,14 +71,22 @@ public:
 	//
 	void pushOdometry(const maebot_motor_feedback_t& odometry);
 
+	/**
+	 * @brief pushes a scan into the particle filter
+	 */
 	void pushScan(const maebot_laser_scan_t& scan);
 
+	/**
+	 * @brief [brief description]
+	 * @details [long description]
+	 * @return [description]
+	 */
 	bool readyToInit(){ return _hasMap; }
 
 	bool initialized(){ return !_prior.empty(); }
 
 	bool readyToProcess(){ return (_hasScan &&
-									_odo.getUtime() > _scan.times[_scan.num_ranges - 1]); }
+		_odo.getUtime() > _scan.times[_scan.num_ranges - 1]); }
 
 	maebot_particle_map_t toLCM();
 

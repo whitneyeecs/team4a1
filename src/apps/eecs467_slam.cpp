@@ -17,6 +17,7 @@
 #include "a1/LaserCorrector.hpp"
 #include "a1/ParticleFilter.hpp"
 #include "a1/Mapper.hpp"
+#include "a1/SlamConstants.hpp"
 
 
 class StateHandler {
@@ -29,7 +30,10 @@ public:
 	lcm::LCM lcm;
 
 public:
-	StateHandler() : mapper(1, 5, 5, 0.05) {
+	StateHandler() : mapper(eecs467::gridSeparationSize,
+		eecs467::gridWidthMeters,
+		eecs467::gridHeightMeters,
+		eecs467::gridCellSizeMeters) {
 		if (!lcm.good()) {
 			printf("lcm unable to initialize\n");
 			exit(1);
@@ -40,8 +44,10 @@ public:
 			exit(1);
 		}
 
-		lcm.subscribe("MAEBOT_LASER_SCAN", &StateHandler::handleLaserMessage, this);
-		lcm.subscribe("MAEBOT_MOTOR_FEEDBACK", &StateHandler::handleMotorFeedbackMessage, this);
+		lcm.subscribe("MAEBOT_LASER_SCAN",
+			&StateHandler::handleLaserMessage, this);
+		lcm.subscribe("MAEBOT_MOTOR_FEEDBACK",
+			&StateHandler::handleMotorFeedbackMessage, this);
 
 		pf.pushMap(mapper.getGrid());
 	}
@@ -81,7 +87,8 @@ private:
 			maebot_pose_t newPose = pf.getBestPose();
 
 			// get corrected laser scans
-			maebot_processed_laser_scan_t processedScans = laser.processSingleScan(*pf.getScan(), oldPose, newPose);
+			maebot_processed_laser_scan_t processedScans = 
+				laser.processSingleScan(*pf.getScan(), oldPose, newPose);
 
 			// update map
 			mapper.update(processedScans);

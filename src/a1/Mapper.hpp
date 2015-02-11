@@ -13,8 +13,10 @@ private:
 	float _separationSize; // size between sampling on scan lines
 
 public:
-	Mapper(float separationSize = 1, float widthInMeters = 5, 
-		float heightInMeters = 5, float metersPerCell = 0.05);
+	Mapper(float separationSize = 1,
+		float widthInMeters = 5,
+		float heightInMeters = 5,
+		float metersPerCell = 0.05);
 
 	void update(const maebot_processed_laser_scan_t& scan);
 

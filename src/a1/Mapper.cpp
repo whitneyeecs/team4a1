@@ -3,8 +3,10 @@
 #include "SlamConstants.hpp"
 #include <cmath>
 
-eecs467::Mapper::Mapper(float separationSize, float widthInMeters, 
-	float heightInMeters, float metersPerCell) :
+eecs467::Mapper::Mapper(float separationSize,
+	float widthInMeters,
+	float heightInMeters,
+	float metersPerCell) :
 	_grid(widthInMeters, heightInMeters, metersPerCell),
 	_separationSize(separationSize) { }
 

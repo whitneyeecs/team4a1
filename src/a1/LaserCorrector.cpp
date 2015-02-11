@@ -57,69 +57,6 @@ maebot_processed_laser_scan_t
 	return single_scan;
 }
 
-
-void eecs467::LaserCorrector::pf_process(maebot_laser_scan_t* msg) {
-
-
-	// process until scansToProcess is empty
-	for(int i  = 0; i < msg->num_ranges; ++i) {
-		// the laser scan with the smallest timestamp still unprocessed
-		SingleLaser laser = {
-				msg->ranges[i],
-				msg->thetas[i],
-				msg->times[i],
-				msg->intensities[i], 0, 0
-		};
-
-		maebot_pose_t oldest;
-		// after this loop poses.front() should contain the first 
-		// pose that has a greater time stamp or will become empty
-		while(!_poses.empty() 
-			&& (_poses.front().utime < laser.utime)) {
-			oldest = _poses.front();
-			_poses.pop_front();
-		}
-
-		// if all poses are used up, we will have to wait for more
-		// pop last one back on and return false
-		if (_poses.empty()) {
-			_poses.push_front(oldest);
-			return;
-		}
-
-		_poses.front().theta = wrap_to_pi(_poses.front().theta);
-		oldest.theta = wrap_to_pi(oldest.theta);
-
-
-		// interpolate the position of the vehicle for the scan
-		float scaling = (float) (laser.utime - oldest.utime) /
-			(float) (_poses.front().utime - oldest.utime);
-		float poseX = oldest.x + scaling * (_poses.front().x - oldest.x);
-		float poseY = oldest.y + scaling * (_poses.front().y - oldest.y);
-		
-		float tmptheta = scaling * angle_diff(_poses.front().theta, oldest.theta);
-		float poseTheta = angle_sum(oldest.theta, tmptheta);
-
-		// push processed scan into current message
-		_processedScans.ranges.push_back(laser.range);
-
-		tmptheta = wrap_to_pi(laserThetaToMaebotTheta(laser.theta));
-		tmptheta = angle_sum(poseTheta, tmptheta);
-		_processedScans.thetas.push_back(tmptheta);
-
-		_processedScans.times.push_back(laser.utime);
-		_processedScans.intensities.push_back(laser.intensity);
-		_processedScans.x_pos.push_back(poseX);
-		_processedScans.y_pos.push_back(poseY);
-
-		// push older pose back on
-//		_poses.push_front(oldest);
-
-		// pop recently processed scan
-//		_scansToProcess.pop_front();
-	}
-}
-
 void eecs467::LaserCorrector::process() {
 	// if there are no scans to process return false
 	if (_scansToProcess.empty()) {
@@ -195,16 +132,6 @@ void eecs467::LaserCorrector::clearPoses() {
 void eecs467::LaserCorrector::clearScans() {
 	_scansToProcess.clear();
 }
-
-/**
- * @brief does the same thing as process however it will not
- * clear the scans after it's processed it (so when this is
- * called again it will be processing the same scans);
- * @details [long description]
- */
-void processSaveScans();
-
-
 
 bool eecs467::LaserCorrector::getCorrectedLcmMsg(maebot_processed_laser_scan_t& msg) {
 	if (_processedScans.ranges.empty()) {

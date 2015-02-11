@@ -15,6 +15,10 @@ private:
 	float _k1;
 	float _k2;
 public:
+	/**
+	 * @param k1 angular error factor
+	 * @param k2 distance error factor
+	 */
 	ActionModel(float k1, float k2);
 
 	/**

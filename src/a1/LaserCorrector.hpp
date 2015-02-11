@@ -13,6 +13,11 @@ namespace eecs467 {
 
 /**
  * @brief Corrects laser thetas and start positions by the pose
+ * This is operated in two ways. you can use either
+ * 1) just the processSingleScan() function to process a 
+ * single scan if you happen to know begin and end poses from before and after the laser
+ * 2) push scans and poses and call process() to process as many scans
+ * as possible given the poses
  */
 class LaserCorrector {
 private:
@@ -51,25 +56,16 @@ public:
 	/**
 	 * @brief tries to process as many laser ranges as possible
 	 */
-
-	maebot_processed_laser_scan_t single_scan_process(const maebot_laser_scan_t* msg,
-		const maebot_pose_t& begin, const maebot_pose_t& end);
-
-	/**
-	 * @brief does the same thing as process however for a single scan between 
-	 * two poses and returns the new corrected scan
-	*/
-
 	void process();
 
-	maebot_processed_laser_scan_t processSingleScan(const maebot_laser_scan_t& msg,
-		const maebot_pose_t& begin,
-		const maebot_pose_t& end);
-
-	void pf_process(maebot_laser_scan_t* msg);
-
+	/**
+	 * @brief clears all poses
+	 */
 	void clearPoses();
 
+	/**
+	 * @brief clears all scans
+	 */
 	void clearScans();
 
 	/**
@@ -80,6 +76,17 @@ public:
 	 * @return returns true if msg was succesfully filled
 	 */
 	 bool getCorrectedLcmMsg(maebot_processed_laser_scan_t& msg);
+
+	 /**
+	 * @brief processes a single scan
+	 * @param msg lasers to process
+	 * @param begin pose that has a timestamp earlier than the earliest timestamped laser
+	 * @param end pose that has a timestamp later than the last laser timestamp
+	 * @return processed lasers
+	 */
+	maebot_processed_laser_scan_t processSingleScan(const maebot_laser_scan_t& msg,
+		const maebot_pose_t& begin,
+		const maebot_pose_t& end);
 };
 
 }

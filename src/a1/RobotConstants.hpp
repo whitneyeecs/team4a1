@@ -3,8 +3,9 @@
 
 #include <cmath>
 
-namespace eecs467 {
+// constants that our unique to the robot
 
+namespace eecs467 {
 
 static const float baseLength = 0.08; // meters
 static const float metersPerTick = 0.00020944; // meters per tick of encoder

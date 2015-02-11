@@ -10,13 +10,13 @@
 
 #include <cmath>
 
+eecs467::ParticleFilter::ParticleComp sort;
+
 eecs467::ParticleFilter::ParticleFilter() :
 	_actionModel(eecs467::actionModelK1, eecs467::actionModelK2),
 	_hasMap(false), _processing(false), _hasScan(false) {
 	randGen = gslu_rand_rng_alloc();
 }
-
-eecs467::ParticleFilter::ParticleComp sort;
 
 void eecs467::ParticleFilter::pushMap(const eecs467::OccupancyGrid* map) { 
 	_sensorModel.pushMap(map);
@@ -24,16 +24,17 @@ void eecs467::ParticleFilter::pushMap(const eecs467::OccupancyGrid* map) {
 }
 
 void eecs467::ParticleFilter::init(const maebot_motor_feedback_t* msg) {
-	_prior.reserve(eecs467::numPreviousParticles + eecs467::numRandomParticles);
-	_random_samples.resize(eecs467::numPreviousParticles + eecs467::numRandomParticles);
+	int totalNumParticles = eecs467::numPreviousParticles + eecs467::numRandomParticles;
+	_prior.reserve(totalNumParticles);
+	_random_samples.resize(totalNumParticles);
 
 	maebot_particle_t particle;
 	particle.pose.x = 0;
 	particle.pose.y = 0;
 	particle.pose.theta = 0;
-	particle.prob = 1.0 / eecs467::numPreviousParticles;
+	particle.prob = 1.0 / totalNumParticles;
 
-	for (int i = 0; i < eecs467::numPreviousParticles + eecs467::numRandomParticles; ++i) {
+	for (int i = 0; i < totalNumParticles; ++i) {
 		_prior.push_back(particle);
 	}
 
@@ -49,6 +50,48 @@ void eecs467::ParticleFilter::pushScan(const maebot_laser_scan_t& scan){
 	_scan = scan;
 	_hasScan = true;
 }
+
+maebot_particle_map_t
+eecs467::ParticleFilter::toLCM(){
+	maebot_particle_map_t msg;
+	msg.utime = _prior.front().pose.utime;
+	msg.grid = _sensorModel.getGrid()->toLCM();
+	msg.num_particles = (int32_t)_prior.size();
+	msg.particles = _prior;
+	return msg;
+}
+
+void eecs467::ParticleFilter::process() {
+	_processing = true;
+	drawRandomSamples();
+	int64_t laserTime = _scan.times[_scan.num_ranges - 1];
+	std::array<int32_t, 2> interpolate = _odo.interpolate(laserTime);
+	std::array<int32_t, 2> deltas = _odo.deltas(interpolate);
+	_odo.set(interpolate, laserTime);
+
+	// precomputing deltaS to save computation!
+	float deltaS = eecs467::metersPerTick * (float)(deltas[0] + deltas[1]) / 2.0f;
+
+	for (auto& particle : _random_samples) {
+		maebot_pose_t oldPose = particle.pose;
+		_actionModel.apply(particle.pose, deltas[0], deltas[1], deltaS, laserTime);
+		_sensorModel.applyRayTrace(particle, _scan, oldPose, particle.pose);
+	}
+
+	normalizeAndSort();
+
+	_hasScan = false;
+	_processing = false;
+};
+
+maebot_pose_t eecs467::ParticleFilter::getBestPose(){
+	return _prior.front().pose;
+}
+
+const maebot_laser_scan_t* eecs467::ParticleFilter::getScan() const {
+	return &_scan;
+}
+
 
 void eecs467::ParticleFilter::drawRandomSamples(){
 	maebot_particle_t mostProbable = _prior.front();
@@ -112,46 +155,3 @@ if(_random_samples.front().prob < _random_samples.back().prob)
 // printf("new prob: %f\n", _prior[i].prob);
 	}
 }
-
-maebot_particle_map_t
-eecs467::ParticleFilter::toLCM(){
-	maebot_particle_map_t msg;
-	msg.utime = _prior.front().pose.utime;
-	msg.grid = _sensorModel.getGrid()->toLCM();
-	msg.num_particles = (int32_t)_prior.size();
-	msg.particles = _prior;
-	return msg;
-}
-
-void eecs467::ParticleFilter::process() {
-	_processing = true;
-	drawRandomSamples();
-	int64_t laserTime = _scan.times[_scan.num_ranges - 1];
-	std::array<int32_t, 2> interpolate = _odo.interpolate(laserTime);
-	std::array<int32_t, 2> deltas = _odo.deltas(interpolate);
-	_odo.set(interpolate, laserTime);
-
-	// precomputing deltaS to save computation!
-	float deltaS = eecs467::metersPerTick * (float)(deltas[0] + deltas[1]) / 2.0f;
-
-	for (auto& particle : _random_samples) {
-		maebot_pose_t oldPose = particle.pose;
-		_actionModel.apply(particle.pose, deltas[0], deltas[1], deltaS, laserTime);
-		// _actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime);
-		_sensorModel.apply(particle, _scan, oldPose);
-	}
-
-	normalizeAndSort();
-
-	_hasScan = false;
-	_processing = false;
-};
-
-maebot_pose_t eecs467::ParticleFilter::getBestPose(){
-	return _prior.front().pose;
-}
-
-const maebot_laser_scan_t* eecs467::ParticleFilter::getScan() const {
-	return &_scan;
-}
-
