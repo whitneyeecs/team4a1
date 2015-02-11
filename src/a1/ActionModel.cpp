@@ -1,5 +1,6 @@
 #include "a1/ActionModel.hpp"
 #include "a1/StateEstimator.hpp"
+#include "a1/RobotConstants.hpp"
 
 #include <cmath>
 #include <chrono>
@@ -11,7 +12,7 @@ eecs467::ActionModel::ActionModel(float k1, float k2)
 	_rand = gslu_rand_rng_alloc();		
 }
 
-void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t utime) {
+void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t utime, bool screwed) {
 	maebot_pose_t nextPose = eecs467::advanceState(pose,
 		deltaRight, deltaLeft, utime);
 
@@ -20,15 +21,26 @@ void eecs467::ActionModel::apply(maebot_pose_t& pose, int32_t deltaRight, int32_
 	float deltaTheta = nextPose.theta - pose.theta;
 
 	float deltaS = sqrt(deltaX * deltaX + deltaY * deltaY);
-	float alpha = atan2(deltaY, deltaX) - pose.theta;
+	float alpha = wrap_to_pi(atan2(deltaY, deltaX) - pose.theta);
+
+//	float deltaS = (float)(deltaLeft + deltaRight) / 2.0;
+//	float deltaTheta = (float)(deltaRight - deltaRight)/eecs467::baseLength;
+//	float alpha = deltaTheta / 2.0;
 
 	// getting noise
 	float e1 = gslu_rand_normal(_rand) * alpha * _k1;
 	float e2 = gslu_rand_normal(_rand) * deltaS * _k2;
-	float e3 = gslu_rand_normal(_rand) * (deltaTheta - alpha) * _k1;
-
-	pose.x += (deltaS + e2)* cos(pose.theta + alpha + e1);
-	pose.y += (deltaS + e2)* sin(pose.theta + alpha + e1);
-	pose.theta = angle_sum(deltaTheta + e1 + e3, pose.theta);
+	float e3 = gslu_rand_normal(_rand) * wrap_to_pi(deltaTheta - alpha) * _k1;
+	if(screwed){
+		pose.x += (deltaS + e2)* cos(pose.theta + alpha + e1) + gslu_rand_normal(_rand) * .01;
+		pose.y += (deltaS + e2)* sin(pose.theta + alpha + e1) + gslu_rand_normal(_rand) * .01;
+		pose.theta = wrap_to_pi(deltaTheta + e1 + pose.theta);
+	}else{
+	
 	pose.utime = nextPose.utime;
+	pose.x += (deltaS + e2)* cos(pose.theta + alpha + e1);// + gslu_rand_normal(_rand) * .01;
+	pose.y += (deltaS + e2)* sin(pose.theta + alpha + e1);// + gslu_rand_normal(_rand) * .01;
+	pose.theta = wrap_to_pi(deltaTheta + e1 + pose.theta);
+	pose.utime = nextPose.utime;
+	}
 }

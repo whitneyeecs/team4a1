@@ -27,12 +27,15 @@ void eecs467::ParticleFilter::init(const maebot_motor_feedback_t* msg){
 	_prior.reserve(eecs467::numParticles);
 	_random_samples.resize(eecs467::numParticles);
 
+
+	gsl_rng * r = gslu_rand_rng_alloc();
+
+
 	maebot_particle_t particle;
 	particle.pose.x = 0;
 	particle.pose.y = 0;
 	particle.pose.theta = 0;
 	particle.prob = 1.0/eecs467::numParticles;
-printf("initialized prob: %f\n", particle.prob);
 
 	for (int i = 0; i < eecs467::numParticles; ++i) {
 		_prior.push_back(particle);
@@ -72,20 +75,26 @@ printf("drawing from #: %i\n\n", j);
 		_random_samples[i] = _prior[j];
 		j = 0;
 		weight = 0.0;
-		_random_samples[i].prob = 0.0;
+//		_random_samples[i].prob = 0.0;
 	}
+
+//		for(int i = 0; i< eecs467::numParticles; ++i){
+//			_random_samples[i] = _prior[i];
+//
+//		}	
 }
 
 void eecs467::ParticleFilter::normalizeAndSort(){
 	std::sort(_random_samples.begin(), _random_samples.end(), sort);
-
-	float scale = _random_samples.back().prob;
+if(_random_samples.front().prob < _random_samples.back().prob)
+		exit(4);
+	float scale = _random_samples.front().prob;
 	float weight = 0.0;
 
 	//scale to zero
 	for(int i = 0; i < eecs467::numParticles; ++i){
 		_random_samples[i].prob += -1.0 * scale;
-		_random_samples[i].prob = exp(_random_samples[i].prob/100.0);
+		_random_samples[i].prob = exp(_random_samples[i].prob);
 	}
 
 	//get total probability
@@ -99,6 +108,7 @@ void eecs467::ParticleFilter::normalizeAndSort(){
 	for(int i = 0; i < eecs467::numParticles; ++i){
 		_random_samples[i].prob /= weight;
 		_prior[i] = _random_samples[i];
+printf("new prob: %f\n", _prior[i].prob);
 	}
 }
 
@@ -123,7 +133,14 @@ void eecs467::ParticleFilter::process() {
 
 	for (auto& particle : _random_samples) {
 		maebot_pose_t oldPose = particle.pose;
-		_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime);
+		if(particle.prob < (0.90 * 1.0/eecs467::numParticles)){
+printf("particle prob in random samples: %f\n", particle.prob);
+			_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime,1);
+
+		} else{
+			_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime,0);
+		}
+		particle.prob = 0.0;
 		_sensorModel.apply(particle, _scan, oldPose);
 	}
 
