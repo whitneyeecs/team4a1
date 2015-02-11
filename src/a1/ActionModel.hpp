@@ -24,7 +24,7 @@ public:
 	 * @param deltaLeft left wheel ticks
 	 * @param utime new time for the pose
 	 */
-	void apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t utime, bool screwed);
+	void apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t utime);
 };
 
 }

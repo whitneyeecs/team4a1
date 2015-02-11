@@ -35,6 +35,10 @@ public:
 
 	const eecs467::OccupancyGrid getGrid() const;
 
+private:
+	void adjustProb(Point<float> point, float& prob,
+		float offGrid, float wall, float empty,
+		float unknown) const;
 };
 
 }

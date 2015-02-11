@@ -1,4 +1,5 @@
 #include "a1/SensorModel.hpp"
+#include "a1/SlamConstants.hpp"
 
 #include "mapping/occupancy_grid_utils.hpp"
 
@@ -21,7 +22,7 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 	float newProb = 0.0f;
 	Point<float> start;
 	Point<float> point, end;
-	// Point<int> cellPos;
+	Point<int> cellPos;
 
 	// for (int i = 0; i < processedScans.num_ranges; ++i) {
 	// 	// points are in meters relative to where robot first started
@@ -38,17 +39,18 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 	// 	float stepX = (end.x - point.x) / eecs467::sensorModelStepsPerLaser;
 	// 	float stepY = (end.y - point.y) / eecs467::sensorModelStepsPerLaser;
 
-	// 	// last step is the end point
-	// 	for (int i = 0; i < steps - 1; ++i) {
-	// 		cellPos = global_position_to_grid_cell(start);
-	// 		if (!_map.isGridInCell(cellPos.y, cellPos.x)) {
+	// 	adjustProb(point, newProb, 30, 5, 0, 0);
 
-	// 		}
+	// 	// last step is the end point
+	// 	// this loops through the middle points
+	// 	for (int i = 1; i < eecs467::sensorModelStepsPerLaser - 1; ++i) {
+	// 		adjustProb(point, newProb, 0, 0.5, 0, 0.25);
 
 	// 		point.x += stepX;
 	// 		point.y += stepY;
 	// 	}
 
+	// 	adjustProb(end, newProb, 0, 0, 1, 2);
 	// }
 
 	for (int i = 0; i < processedScans.num_ranges; ++i) {
@@ -72,16 +74,16 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 
 		if(!_map.isCellInGrid(cell.x, cell.y)) {
 			// out of grid
-			newProb -= 16;
+			newProb -= eecs467::sensorModelOutOfGrid;
 		} else if(_map.logOdds(cell.x, cell.y) > 120) {
 			// wall
-			newProb -= 1;
+			newProb -= eecs467::sensorModelWall;
 		} else if(_map.logOdds(cell.x, cell.y) < -120) {
 			// open
-			newProb -= 6;
+			newProb -= eecs467::sensorModelOpen;
 		} else {
 			// unexplored
-			newProb -= 12;
+			newProb -= eecs467::sensorModelUnexplored;
 		}
 	}
 	particle.prob = newProb;
@@ -90,5 +92,23 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 
 const eecs467::OccupancyGrid eecs467::SensorModel::getGrid() const {
 	return _map;
+}
+
+void eecs467::SensorModel::adjustProb(Point<float> point, float& prob, float offGrid,
+	float wall, float empty, float unknown) const {
+	Point<int> cellPos = global_position_to_grid_cell(point, _map);
+	if (!_map.isCellInGrid(cellPos.y, cellPos.x)) {
+		// laser goes off grid
+		prob -= offGrid;
+	} else if (_map.logOdds(cellPos.x, cellPos.y) > 120) {
+		// wall
+		prob -= wall;
+	} else if (_map.logOdds(cellPos.x, cellPos.y) < -120) {
+		// empty
+		prob -= empty;
+	} else {
+		// unknown
+		prob -= unknown;
+	}
 }
 

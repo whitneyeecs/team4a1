@@ -36,6 +36,8 @@ private:
 	bool _processing;
 	bool _hasScan;
 	
+	gsl_rng* randGen;
+
 	maebot_laser_scan_t _scan;
 	maebot_particle_map_t _particle_map;
 
