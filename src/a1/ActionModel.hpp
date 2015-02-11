@@ -25,6 +25,17 @@ public:
 	 * @param utime new time for the pose
 	 */
 	void apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, int64_t utime);
+
+	/**
+	 * @brief applies action model to pose has extra parameter
+	 * for when this is called a lot so it saves computation of deltaS
+	 * @param pose pose to apply action model to
+	 * @param deltaRight right wheel ticks
+	 * @param deltaLeft left wheel ticks
+	 * @param deltaS precomputed sqrt(deltaRight^2 + deltaLeft^2)
+	 * @param utime new time for the pose
+	 */
+	void apply(maebot_pose_t& pose, int32_t deltaRight, int32_t deltaLeft, float deltaS, int64_t utime);
 };
 
 }

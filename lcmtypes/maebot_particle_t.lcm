@@ -2,6 +2,4 @@ struct maebot_particle_t {
 	
 	maebot_pose_t pose;
 	float prob;
-	int32_t l_ticks;
-	int32_t r_ticks;
 }

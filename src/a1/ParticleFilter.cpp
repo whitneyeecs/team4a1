@@ -133,16 +133,13 @@ void eecs467::ParticleFilter::process() {
 	std::array<int32_t, 2> deltas = _odo.deltas(interpolate);
 	_odo.set(interpolate, laserTime);
 
+	// precomputing deltaS to save computation!
+	float deltaS = eecs467::metersPerTick * (float)(deltas[0] + deltas[1]) / 2.0f;
+
 	for (auto& particle : _random_samples) {
 		maebot_pose_t oldPose = particle.pose;
-// 		if(particle.prob < (0.90 * 1.0 / eecs467::numPreviousParticles)){
-// // printf("particle prob in random samples: %f\n", particle.prob);
-// 			_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime, true);
-
-// 		} else {
-// 			_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime, false);
-// 		}
-		_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime);
+		_actionModel.apply(particle.pose, deltas[0], deltas[1], deltaS, laserTime);
+		// _actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime);
 		_sensorModel.apply(particle, _scan, oldPose);
 	}
 
