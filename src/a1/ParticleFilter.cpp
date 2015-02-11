@@ -12,7 +12,6 @@
 
 eecs467::ParticleFilter::ParticleFilter() :
 	_actionModel(eecs467::actionModelK1, eecs467::actionModelK2),
-//	_actionModel(0.0, 0.0),
 	_hasMap(false), _processing(false), _hasScan(false) { }
 
 eecs467::ParticleFilter::ParticleComp sort;
@@ -64,14 +63,13 @@ void eecs467::ParticleFilter::drawRandomSamples(){
 	for(int i = 0; i < eecs467::numParticles; ++i){
 		target = gslu_rand_uniform(r);
 
-printf("target is: %f\n", target);
-
+// printf("target is: %f\n", target);
 		for( ; weight < target && j < eecs467::numParticles; ++j){
 			weight += _prior[j].prob;
 		}
 		if(j >= eecs467::numParticles)
 				--j;
-printf("drawing from #: %i\n\n", j);
+// printf("drawing from #: %i\n\n", j);
 		_random_samples[i] = _prior[j];
 		j = 0;
 		weight = 0.0;

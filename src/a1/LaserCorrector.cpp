@@ -29,15 +29,14 @@ maebot_processed_laser_scan_t
 
 	maebot_processed_laser_scan_t single_scan;
 
+	// interpolate the position of the vehicle for the scan
+	float endtheta = wrap_to_pi(end.theta);
+	float begintheta = wrap_to_pi(begin.theta);
+
 	// process until scansToProcess is empty
 	for(int i  = 0; i < msg.num_ranges; ++i) {
-		// interpolate the position of the vehicle for the scan
-		
-		float endtheta = wrap_to_pi(end.theta);
-		float begintheta = wrap_to_pi(begin.theta);
-
-		float scaling = (float) (msg.utime - begin.utime) /
-                               (float) (end.utime - begin.utime);
+		float scaling = (float) (msg.times[i] - begin.utime) /
+						(float) (end.utime - begin.utime);
 		float poseX = begin.x + scaling * (end.x - begin.x);
 		float poseY = begin.y + scaling * (end.y - begin.y);
 		
@@ -47,7 +46,6 @@ maebot_processed_laser_scan_t
 		tmptheta = wrap_to_pi(laserThetaToMaebotTheta(msg.thetas[i]));
 		tmptheta = angle_sum(poseTheta, tmptheta);
 
-		single_scan.num_ranges = msg.num_ranges;
 		single_scan.ranges.push_back(msg.ranges[i]);
 		single_scan.thetas.push_back(tmptheta);
 		single_scan.times.push_back(msg.times[i]);
@@ -55,7 +53,7 @@ maebot_processed_laser_scan_t
 		single_scan.x_pos.push_back(poseX);
 		single_scan.y_pos.push_back(poseY);	
 	}
-
+	single_scan.num_ranges = msg.num_ranges;
 	return single_scan;
 }
 
@@ -90,7 +88,7 @@ void eecs467::LaserCorrector::pf_process(maebot_laser_scan_t* msg) {
 		}
 
 		_poses.front().theta = wrap_to_pi(_poses.front().theta);
- 		oldest.theta = wrap_to_pi(oldest.theta);
+		oldest.theta = wrap_to_pi(oldest.theta);
 
 
 		// interpolate the position of the vehicle for the scan
@@ -159,7 +157,7 @@ void eecs467::LaserCorrector::process() {
 		}
 
 		_poses.front().theta = wrap_to_pi(_poses.front().theta);
- 		oldest.theta = wrap_to_pi(oldest.theta);
+		oldest.theta = wrap_to_pi(oldest.theta);
 
 		// interpolate the position of the vehicle for the scan
 		float scaling = (float) (laser.utime - oldest.utime) /
