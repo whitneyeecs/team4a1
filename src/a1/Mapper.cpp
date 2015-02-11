@@ -55,7 +55,6 @@ void eecs467::Mapper::update(const maebot_processed_laser_scan_t& scan) {
 		} else {
 			_grid(cellPos.y, cellPos.x) += eecs467::occupiedEvidenceStrength;
 		}
-
 	}
 }
 

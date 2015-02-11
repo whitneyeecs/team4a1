@@ -55,11 +55,8 @@ void eecs467::SensorModel::apply(maebot_particle_t& particle, const maebot_laser
 		}
 	}
 	particle.prob = newProb;
-	if(particle.prob != newProb)
-			exit(3);
 //printf("the new prob from sensor model: %f\n", particle.prob);
 }
-
 
 const eecs467::OccupancyGrid eecs467::SensorModel::getGrid() const {
 	return _map;

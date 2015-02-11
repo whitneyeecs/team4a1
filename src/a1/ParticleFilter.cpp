@@ -26,9 +26,7 @@ void eecs467::ParticleFilter::init(const maebot_motor_feedback_t* msg){
 	_prior.reserve(eecs467::numParticles);
 	_random_samples.resize(eecs467::numParticles);
 
-
 	gsl_rng * r = gslu_rand_rng_alloc();
-
 
 	maebot_particle_t particle;
 	particle.pose.x = 0;
@@ -106,7 +104,7 @@ if(_random_samples.front().prob < _random_samples.back().prob)
 	for(int i = 0; i < eecs467::numParticles; ++i){
 		_random_samples[i].prob /= weight;
 		_prior[i] = _random_samples[i];
-printf("new prob: %f\n", _prior[i].prob);
+// printf("new prob: %f\n", _prior[i].prob);
 	}
 }
 
@@ -131,12 +129,12 @@ void eecs467::ParticleFilter::process() {
 
 	for (auto& particle : _random_samples) {
 		maebot_pose_t oldPose = particle.pose;
-		if(particle.prob < (0.90 * 1.0/eecs467::numParticles)){
-printf("particle prob in random samples: %f\n", particle.prob);
-			_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime,1);
+		if(particle.prob < (0.90 * 1.0 / eecs467::numParticles)){
+// printf("particle prob in random samples: %f\n", particle.prob);
+			_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime, true);
 
-		} else{
-			_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime,0);
+		} else {
+			_actionModel.apply(particle.pose, deltas[0], deltas[1], laserTime, false);
 		}
 		particle.prob = 0.0;
 		_sensorModel.apply(particle, _scan, oldPose);
