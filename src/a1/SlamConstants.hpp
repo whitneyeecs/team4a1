@@ -17,10 +17,14 @@ namespace eecs467 {
 // at the end points
 // #define SENSOR_RAY_TRACE
 
+// #define CIRCLE_RANDOM_DRAW_PARTICLES
+
 // number of particles drawn from prior
 static const int numPreviousParticles = 1000;
 // number of particles to be sampled randomly around most probable particle
 static const int numRandomParticles = 300;
+
+static const float randParticleSpread = 0.1;
 
 // mapping strengths
 static const int emptyEvidenceStrength = 2;

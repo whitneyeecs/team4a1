@@ -79,7 +79,7 @@ void eecs467::ParticleFilter::process() {
 		_sensorModel.applyRayTrace(particle, _scan, oldPose, particle.pose);
 #else
 		_sensorModel.applyEndPoints(particle, _scan, oldPose, particle.pose);
-#endif
+#endif /* SENSOR_RAY_TRACE */
 	}
 
 	normalizeAndSort(deltas, laserTime);
@@ -119,8 +119,16 @@ void eecs467::ParticleFilter::drawRandomSamples(){
 	}
 
 	for (int i = 0; i < eecs467::numRandomParticles; ++i) {
-		float randX = (gslu_rand_uniform(randGen) - 0.5) * 0.05;
-		float randY = (gslu_rand_uniform(randGen) - 0.5) * 0.05;
+#ifdef CIRCLE_RANDOM_DRAW_PARTICLES
+		float randRadius = gslu_rand_uniform(randGen) * eecs467::randParticleSpread;
+		float randRadiusTheta = gslu_rand_uniform(randGen) * M_PI * 2;
+		float randX = randRadius * cos(randRadiusTheta);
+		float randY = randRadius * sin(randRadiusTheta);
+#else
+		float randX = (gslu_rand_uniform(randGen) - 0.5) * eecs467::randParticleSpread;
+		float randY = (gslu_rand_uniform(randGen) - 0.5) * eecs467::randParticleSpread;
+#endif /* CIRCLE_RANDOM_DRAW_PARTICLES */
+
 		float randTheta = (gslu_rand_uniform(randGen) - 0.5) * 0.01;
 
 		maebot_particle_t newParticle = mostProbable;
