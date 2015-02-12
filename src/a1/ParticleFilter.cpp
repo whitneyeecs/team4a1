@@ -24,7 +24,8 @@ void eecs467::ParticleFilter::pushMap(const eecs467::OccupancyGrid* map) {
 }
 
 void eecs467::ParticleFilter::init(const maebot_motor_feedback_t* msg) {
-	int totalNumParticles = eecs467::numPreviousParticles + eecs467::numRandomParticles;
+	int totalNumParticles = eecs467::numPreviousParticles 
+		+ eecs467::numRandomParticles;
 	_prior.reserve(totalNumParticles);
 	_random_samples.resize(totalNumParticles);
 
@@ -69,16 +70,31 @@ void eecs467::ParticleFilter::process() {
 	std::array<int32_t, 2> deltas = _odo.deltas(interpolate);
 	_odo.set(interpolate, laserTime);
 
+	bool move = true;
+	if (deltas[0] == 0 && deltas[1] == 0) {
+		move = false;
+	}
+
 	// precomputing deltaS to save computation!
 	float deltaS = eecs467::metersPerTick * (float)(deltas[0] + deltas[1]) / 2.0f;
 
 	for (auto& particle : _random_samples) {
 		maebot_pose_t oldPose = particle.pose;
-		_actionModel.apply(particle.pose, deltas[0], deltas[1], deltaS, laserTime);
+
+		if (move) {
+			_actionModel.apply(particle.pose,
+					deltas[0], deltas[1],
+					deltaS, laserTime);
+		} else {
+			particle.pose.utime = laserTime;
+		}
+
 #ifdef SENSOR_RAY_TRACE
-		_sensorModel.applyRayTrace(particle, _scan, oldPose, particle.pose);
+		_sensorModel.applyRayTrace(particle, _scan,
+			oldPose, particle.pose);
 #else
-		_sensorModel.applyEndPoints(particle, _scan, oldPose, particle.pose);
+		_sensorModel.applyEndPoints(particle, _scan,
+			oldPose, particle.pose);
 #endif /* SENSOR_RAY_TRACE */
 	}
 
@@ -120,13 +136,16 @@ void eecs467::ParticleFilter::drawRandomSamples(){
 
 	for (int i = 0; i < eecs467::numRandomParticles; ++i) {
 #ifdef CIRCLE_RANDOM_DRAW_PARTICLES
-		float randRadius = gslu_rand_uniform(randGen) * eecs467::randParticleSpread;
+		float randRadius = gslu_rand_uniform(randGen) 
+			* eecs467::randParticleSpread;
 		float randRadiusTheta = gslu_rand_uniform(randGen) * M_PI * 2;
 		float randX = randRadius * cos(randRadiusTheta);
 		float randY = randRadius * sin(randRadiusTheta);
 #else
-		float randX = (gslu_rand_uniform(randGen) - 0.5) * eecs467::randParticleSpread;
-		float randY = (gslu_rand_uniform(randGen) - 0.5) * eecs467::randParticleSpread;
+		float randX = (gslu_rand_uniform(randGen) - 0.5) 
+			* eecs467::randParticleSpread;
+		float randY = (gslu_rand_uniform(randGen) - 0.5) 
+			* eecs467::randParticleSpread;
 #endif /* CIRCLE_RANDOM_DRAW_PARTICLES */
 
 		float randTheta = (gslu_rand_uniform(randGen) - 0.5) * 0.01;
@@ -140,46 +159,12 @@ void eecs467::ParticleFilter::drawRandomSamples(){
 	}
 }
 
-void eecs467::ParticleFilter::normalizeAndSort(const std::array<int32_t, 2>& deltas, int64_t utime){
+void eecs467::ParticleFilter::normalizeAndSort(const std::array<int32_t, 2>& deltas, 
+	int64_t utime){
 	std::sort(_random_samples.begin(), _random_samples.end(), sort);
 
 	int totalNumParticles = eecs467::numPreviousParticles +
 		eecs467::numRandomParticles;
-
-	// printf("%f, %f\n", _random_samples.front().prob, _random_samples.back().prob);
-#ifdef ODOMETRY_COMPENSATE
-	// if the highest probability of a particle is too low
-	// we only use odometry more heavily
-	// we will draw one particle with just the odometry applied
-	// straight on the previous iteration's most probable particle
-	// with 0.5 probability, and then randomly choose points around
-	// that pose
-	// this is used in conjunction with different constants so that
-	// unexplored spaces will lower probability and thus depend more
-	// on odometry (especially in the begining)
-	if (_random_samples.front().prob <
-			eecs467::odometryCompensateThreshold) {
-		maebot_pose_t& oldPose = _prior.front().pose;
-		maebot_pose_t newPose = advanceState(oldPose, deltas[0], deltas[1], utime);
-		_prior.front().pose = newPose;
-		_prior.front().prob = 0.5;
-
-		for (int i = 1; i < totalNumParticles; i++) {
-			_prior[i].pose.x = newPose.x +
-				(gslu_rand_uniform(randGen) - 0.5) * 0.1;
-
-			_prior[i].pose.y = newPose.y +
-				(gslu_rand_uniform(randGen) - 0.5) * 0.1;
-
-			_prior[i].pose.theta = newPose.y + 
-				(gslu_rand_uniform(randGen) - 0.5) * 0.05;
-
-			_prior[i].prob = 0.5f / 
-				totalNumParticles;
-		}
-		return;
-	}
-#endif
 
 	float scale = _random_samples.front().prob;
 	float weight = 0.0;
