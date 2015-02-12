@@ -75,10 +75,14 @@ void eecs467::ParticleFilter::process() {
 	for (auto& particle : _random_samples) {
 		maebot_pose_t oldPose = particle.pose;
 		_actionModel.apply(particle.pose, deltas[0], deltas[1], deltaS, laserTime);
+#ifdef SENSOR_RAY_TRACE
 		_sensorModel.applyRayTrace(particle, _scan, oldPose, particle.pose);
+#else
+		_sensorModel.applyEndPoints(particle, _scan, oldPose, particle.pose);
+#endif
 	}
 
-	normalizeAndSort();
+	normalizeAndSort(deltas, laserTime);
 
 	_hasScan = false;
 	_processing = false;
@@ -128,30 +132,64 @@ void eecs467::ParticleFilter::drawRandomSamples(){
 	}
 }
 
-void eecs467::ParticleFilter::normalizeAndSort(){
+void eecs467::ParticleFilter::normalizeAndSort(const std::array<int32_t, 2>& deltas, int64_t utime){
 	std::sort(_random_samples.begin(), _random_samples.end(), sort);
-if(_random_samples.front().prob < _random_samples.back().prob)
-		exit(4);
+
+	int totalNumParticles = eecs467::numPreviousParticles +
+		eecs467::numRandomParticles;
+
+	// printf("%f, %f\n", _random_samples.front().prob, _random_samples.back().prob);
+#ifdef ODOMETRY_COMPENSATE
+	// if the highest probability of a particle is too low
+	// we only use odometry more heavily
+	// we will draw one particle with just the odometry applied
+	// straight on the previous iteration's most probable particle
+	// with 0.5 probability, and then randomly choose points around
+	// that pose
+	// this is used in conjunction with different constants so that
+	// unexplored spaces will lower probability and thus depend more
+	// on odometry (especially in the begining)
+	if (_random_samples.front().prob <
+			eecs467::odometryCompensateThreshold) {
+		maebot_pose_t& oldPose = _prior.front().pose;
+		maebot_pose_t newPose = advanceState(oldPose, deltas[0], deltas[1], utime);
+		_prior.front().pose = newPose;
+		_prior.front().prob = 0.5;
+
+		for (int i = 1; i < totalNumParticles; i++) {
+			_prior[i].pose.x = newPose.x +
+				(gslu_rand_uniform(randGen) - 0.5) * 0.1;
+
+			_prior[i].pose.y = newPose.y +
+				(gslu_rand_uniform(randGen) - 0.5) * 0.1;
+
+			_prior[i].pose.theta = newPose.y + 
+				(gslu_rand_uniform(randGen) - 0.5) * 0.05;
+
+			_prior[i].prob = 0.5f / 
+				totalNumParticles;
+		}
+		return;
+	}
+#endif
+
 	float scale = _random_samples.front().prob;
 	float weight = 0.0;
 
 	//scale to zero
-	for(int i = 0; i < eecs467::numPreviousParticles; ++i){
+	for(int i = 0; i < totalNumParticles; ++i){
 		_random_samples[i].prob += -1.0 * scale;
 		_random_samples[i].prob = exp(_random_samples[i].prob);
 	}
 
 	//get total probability
-	//
-	for(int i = 0; i < eecs467::numPreviousParticles; ++i){
+	for(int i = 0; i < totalNumParticles; ++i){
 		weight += _random_samples[i].prob;
 	}
 
 	//normalize
-	//
-	for(int i = 0; i < eecs467::numPreviousParticles; ++i){
+	for(int i = 0; i < totalNumParticles; ++i){
 		_random_samples[i].prob /= weight;
 		_prior[i] = _random_samples[i];
-// printf("new prob: %f\n", _prior[i].prob);
 	}
 }

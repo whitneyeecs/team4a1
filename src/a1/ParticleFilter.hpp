@@ -101,7 +101,7 @@ public:
 private:
 	void drawRandomSamples();
 
-	void normalizeAndSort();
+	void normalizeAndSort(const std::array<int32_t, 2>& deltas, int64_t utime);
 
 }; //end class
 
