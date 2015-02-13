@@ -22,9 +22,9 @@ namespace eecs467 {
 #define ODOMETRY_NO_MOVE
 
 // number of particles drawn from prior
-static const int numPreviousParticles = 1000;
+static const int numPreviousParticles = 500;
 // number of particles to be sampled randomly around most probable particle
-static const int numRandomParticles = 500;
+static const int numRandomParticles = 100;
 
 static const float randParticleSpread = 0.05;
 

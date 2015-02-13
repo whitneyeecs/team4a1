@@ -9,6 +9,7 @@
 #include <lcm/lcm-cpp.hpp>
 #include <lcmtypes/maebot_occupancy_grid_t.hpp>
 #include <lcmtypes/maebot_motor_feedback_t.hpp>
+#include <lcmtypes/maebot_motor_command_t.hpp>
 #include <lcmtypes/maebot_laser_scan_t.hpp>
 #include <lcmtypes/maebot_pose_t.hpp>
 #include <lcmtypes/maebot_map_data_t.hpp>
@@ -24,7 +25,12 @@ public:
 	eecs467::LaserCorrector laser;
 	eecs467::ParticleFilter pf;
 	eecs467::Mapper mapper;
+
+	int initialScanCounter;
+
 	pthread_mutex_t dataMutex;
+
+	pthread_t controlThreadPid;
 
 	lcm::LCM lcm;
 
@@ -49,6 +55,13 @@ public:
 			&StateHandler::handleMotorFeedbackMessage, this);
 
 		pf.pushMap(mapper.getGrid());
+
+		initialScanCounter = 0;
+	}
+
+	void launchThreads() {
+		pthread_create(&controlThreadPid, NULL,
+			&StateHandler::controlThread, this);
 	}
 
 private:
@@ -94,14 +107,78 @@ private:
 
 			maebot_particle_map_t pfMsg = pf.toLCM();
 			lcm.publish("MAEBOT_PARTICLE_MAP", &pfMsg);
+
+			initialScanCounter++;
 		}
 
 		pthread_mutex_unlock(&dataMutex);
+	}
+
+	static void* controlThread(void* arg) {
+		StateHandler* state = (StateHandler*) arg;
+
+		// wait for at least 2 initial scans
+		while (1) {
+			pthread_mutex_lock(&state->dataMutex);
+			if (state->initialScanCounter >= 2) {
+				pthread_mutex_unlock(&state->dataMutex);
+				break;
+			}
+			pthread_mutex_unlock(&state->dataMutex);
+		}
+
+		// main control loop
+		maebot_motor_command_t commandMsg;
+		float leftWheelSpeed = 0.25;
+		float rightWheelSpeed = 0.25;
+		while (1) {
+			char inChar;
+			std::cout << "enter command: ";
+			std::cin >> inChar;
+			switch (inChar) {
+				case 'w':
+					commandMsg.motor_left_speed = leftWheelSpeed;
+					commandMsg.motor_right_speed = rightWheelSpeed;
+					break;
+				case 'a':
+					commandMsg.motor_left_speed = -leftWheelSpeed;
+					commandMsg.motor_right_speed = rightWheelSpeed;
+					break;
+				case 's':
+					commandMsg.motor_left_speed = -leftWheelSpeed;
+					commandMsg.motor_right_speed = -rightWheelSpeed;
+					break;
+				case 'd':
+					commandMsg.motor_left_speed = leftWheelSpeed;
+					commandMsg.motor_right_speed = -rightWheelSpeed;
+					break;
+				default:
+					printf("Not a command");
+					continue;
+			}
+
+			state->lcm.publish("MAEBOT_MOTOR_COMMAND", &commandMsg);
+			switch (inChar) {
+				case 'w':
+				case 's':
+					usleep(1e6);
+					break;
+				case 'a':
+				case 'd':
+					usleep(5e5);
+			}
+			commandMsg.motor_left_speed = 0;
+			commandMsg.motor_right_speed = 0;
+			state->lcm.publish("MAEBOT_MOTOR_COMMAND", &commandMsg);
+		}
+		
+		return NULL;
 	}
 };
 
 int main() {
 	StateHandler state;
+	state.launchThreads();
 
 	while(1) {
 		state.lcm.handle();
