@@ -9,7 +9,8 @@ LIBDEPS = $(call libdeps, $(LDFLAGS))
 
 LIB_A1 = $(LIB_PATH)/liba1.a
 LIB_A1_OBJS = StateEstimator.o VirtualOdometry.o LaserCorrector.o \
-	Mapper.o ParticleFilter.o ActionModel.o SensorModel.o Navigation.o
+	Mapper.o ParticleFilter.o ActionModel.o SensorModel.o Navigation.o\
+	Explore.o
 
 ALL = $(LIB_A1)
 
