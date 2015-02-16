@@ -45,13 +45,16 @@ BIN_EECS467_MAPPER = $(BIN_PATH)/eecs467_mapper
 BIN_EECS_PARTICLE_GUI = $(BIN_PATH)/eecs_particle_gui
 BIN_EECS467_SLAM = $(BIN_PATH)/eecs467_slam
 BIN_EECS467_SLAM_MANUAL = $(BIN_PATH)/eecs467_slam_manual
+BIN_EECS467_LIVE_SLAM = $(BIN_PATH)/eecs467_live_slam
 
 ALL = $(LIB_EECS467) $(BIN_EECS467_GUI_EXAMPLE) $(BIN_EECS467_REXARM_EXAMPLE) \
 	  $(BIN_EECS467_MAEBOT_EXAMPLE) $(BIN_EECS467_MAEBOT_VIDEO_TELOP) \
 	  $(BIN_EECS467_MAP_GUI) $(BIN_EECS467_MAPPER) \
 	  $(BIN_EECS_PARTICLE_GUI) \
 	  $(BIN_EECS467_SLAM) \
-	  $(BIN_EECS467_SLAM_MANUAL)
+	  $(BIN_EECS467_SLAM_MANUAL) \
+	  $(BIN_EECS467_LIVE_SLAM) 
+
 
 all: $(ALL)
 
@@ -93,7 +96,11 @@ $(BIN_EECS467_SLAM): eecs467_slam.o $(LIBDEPS)
 
 $(BIN_EECS467_SLAM_MANUAL): eecs467_slam_manual.o $(LIBDEPS)
 	@echo "\t$@"
-	@$(CXX) -o $@ $^ $(LDFLAGS)	
+	@$(CXX) -o $@ $^ $(LDFLAGS)
+
+$(BIN_EECS467_LIVE_SLAM): eecs467_live_slam.o $(LIBDEPS)
+	@echo "\t$@"
+	@$(CXX) -o $@ $^ $(LDFLAGS)
 
 clean:
 	@rm -f *.o *~ *.a

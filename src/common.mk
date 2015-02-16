@@ -191,6 +191,10 @@ LDFLAGS_EECS467 := -L$(LIB_PATH) -leecs467 $(LDFLAGS_VX_GTK) $(LDFLAGS_IMAGESOUR
 	@echo "    $@"
 	@$(CC) $(CFLAGS) -c $<
 
+%.o: %.cpp %.hpp
+	@echo "    $@"
+	@$(CXX) $(CXXFLAGS) -c $<
+
 %.o: %.cpp
 	@echo "    $@"
 	@$(CXX) $(CXXFLAGS) -c $<

@@ -46,8 +46,8 @@ private:
 
 public:
 	typedef struct ParticleComp{
-		bool operator()(maebot_particle_t a, 
-			maebot_particle_t b) const{
+		bool operator()(const maebot_particle_t& a, 
+			const maebot_particle_t& b) const{
 			return a.prob > b.prob;
 		}
 	} ParticleComp;
