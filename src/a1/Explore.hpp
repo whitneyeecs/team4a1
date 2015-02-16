@@ -20,6 +20,8 @@ public:
 
 	Point<int> getNextWayPoint(const OccupancyGrid& grid, const Point<double>& currPos);
 
+	void clearAllPaths();
+
 private:
 	/**
 	 * @brief generates a configuration space

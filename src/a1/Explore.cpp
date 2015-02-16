@@ -23,6 +23,10 @@ Point<int> Explore::getNextWayPoint(const OccupancyGrid& grid, const Point<doubl
 	return Point<int>();
 }
 
+void Explore::clearPath() {
+	_wayPoints.clear();
+}
+
 OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float radius) {
 	eecs467::OccupancyGrid configSpace(grid.widthInMeters(),
 		grid.heightInMeters(), grid.metersPerCell());
