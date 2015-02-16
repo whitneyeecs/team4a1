@@ -37,7 +37,8 @@ private:
 	 * @return specific points from the path where the first element is the destination
 	 * and the last element is the start
 	 */
-	std::vector<Point<int>> pickWayPoints(const OccupancyGrid& grid, const std::vector<Point<int>>& points);
+	std::vector<Point<int>> pickWayPoints(const OccupancyGrid& grid, 
+		const std::vector<Point<int>>& points);
 
 	/**
 	 * @brief generates a vector of points consisting of 
@@ -46,7 +47,9 @@ private:
 	 * @param grid const ref to a configuration space
 	 * @return path where the first element is the destination and the last element is the start
 	 */
-	std::vector<Point<int>> breadthFirstSearch(const OccupancyGrid& grid, const Point<double>& currPos);
+	std::vector<Point<int>> breadthFirstSearch(OccupancyGrid& grid, 
+		const Point<int>& currPos);
+
 };
 
 }
