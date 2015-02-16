@@ -129,8 +129,8 @@ private:
 
 		// main control loop
 		maebot_motor_command_t commandMsg;
-		float leftWheelSpeed = 0.25;
-		float rightWheelSpeed = 0.25;
+		float leftWheelSpeed = 0.2;
+		float rightWheelSpeed = 0.2;
 		while (1) {
 			char inChar;
 			std::cout << "enter command: ";
@@ -161,7 +161,7 @@ private:
 			switch (inChar) {
 				case 'w':
 				case 's':
-					usleep(1e6);
+					usleep(3e6);
 					break;
 				case 'a':
 				case 'd':
@@ -171,7 +171,7 @@ private:
 			commandMsg.motor_right_speed = 0;
 			state->lcm.publish("MAEBOT_MOTOR_COMMAND", &commandMsg);
 		}
-		
+
 		return NULL;
 	}
 };
