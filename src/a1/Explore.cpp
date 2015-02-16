@@ -7,16 +7,6 @@
 
 namespace eecs467 {
 
-enum Direction : char { NONE, LEFT, RIGHT, DOWN, UP };
-
-enum State : char { EMPTY = 0, WALL = 1 << 4, UNKNOWN = 2 < 4 };
-
-const char StateMask = 0xF0;
-const char DirectionMask = 0x0F;
-
-#define state(x) (x & StateMask)
-#define dir(x) (x & DirectionMask)
-
 Explore::Explore() { }
 
 Point<int> Explore::getNextWayPoint(const OccupancyGrid& grid, const Point<double>& currPos) {
@@ -137,6 +127,5 @@ std::vector<Point<int>> Explore::breadthFirstSearch(OccupancyGrid& grid,
 
 	return path;
 }
-
 
 }
