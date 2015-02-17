@@ -4,6 +4,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "a1/SlamConstants.hpp"
+
 #include <math/point.hpp>
 #include <mapping/occupancy_grid.hpp>
 #include <mapping/occupancy_grid_utils.hpp>
@@ -14,6 +16,36 @@ namespace eecs467 {
 class Explore {
 private:
 	std::vector<Point<int>> _wayPoints;
+
+	bool detectObstacle(const OccupancyGrid& grid, const Point<int>& start, const Point<int>& end, double steps){
+		
+		Point<int> cellPos;
+		
+		Point<double> point;
+		point.x = start.x;
+		point.y = start.y;
+		
+		Point<double> endpoint;
+		endpoint.x = end.x;
+		endpoint.y = end.y; 
+
+		float stepx = (endpoint.x - point.x) / steps;
+		float stepy = (endpoint.y - point.y) / steps;
+
+		for(unsigned int i = 1; i < steps; i++)  {
+
+			point.x += stepx;
+			point.y += stepy;
+	
+			Point<int> cellPos = global_position_to_grid_cell(point, grid);
+
+			if(grid.logOdds(cellPos.y, cellPos.y) > eecs467::wallThreshold)
+				return false; //hit a wall
+
+		}
+		
+		return false;
+	}
 
 public:
 	Explore();

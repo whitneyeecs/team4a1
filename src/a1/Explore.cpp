@@ -9,6 +9,19 @@ Explore::Explore() { }
 
 Point<int> Explore::getNextWayPoint(const OccupancyGrid& grid, const Point<double>& currPos) {
 
+	//OccupancyGrid space = getConfigurationSpace(grid, baseLength/2);
+	
+	//std::vector< Point<int> > points = breadthfirstSearch(space, currPos);
+
+	//points = pickWayPoints(space, points);
+
+	//_waypoints = points;
+
+	Point<int> waypoint = _wayPoints.back();
+	_wayPoints.pop_back();
+
+	return waypoint;
+
 }
 
 OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float radius) {
@@ -26,7 +39,7 @@ OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float ra
 				Point<double> globalOriginPt = 
 					grid_position_to_global_position(gridOriginPt, grid);
 				for (float theta = 0; theta < 2 * M_PI; 
-					theta += deltaTheta) {
+					theta += deltaTheta) {const OccupancyGrid& grid
 					Point<double> edgePt{globalOriginPt.x + cos(theta), 
 						globalOriginPt.y + sin(theta)};
 					Point<int> gridEdgePt = 
@@ -43,11 +56,35 @@ OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float ra
 
 std::vector<Point<int>> Explore::pickWayPoints(const OccupancyGrid& grid, const std::vector<Point<int>>& points) {
 
+	std::vector< Point<int> > updateWaypoints;
+
+	Point<int> startPoint;
+	Point<int> checkPoint; 
+	
+	int s = 0; //index of startPoint
+	startPoint = points[s];
+	updateWaypoints.push_back(startPoint);	
+
+	for(unsigned int i = 1; i < points.size(); i++) {
+		
+		checkPoint = points[i];
+		int step = i - s; //# of steps checkpoint is away from startpoint
+
+		if(detectObstacle(grid, startPoint, checkPoint, step)) {
+			updateWaypoints.push_back(points[i-1]);
+			startPoint = checkPoint;
+			s = i; //update index of startpoint
+		}
+
+		else 
+			startPoint = startPoint;
+	}
+
+	return updateWaypoints;
 }
 
 std::vector<Point<int>> Explore::breadthFirstSearch(const OccupancyGrid& grid, const Point<double>& currPos) {
 
 }
-
 
 }
