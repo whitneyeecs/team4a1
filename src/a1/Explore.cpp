@@ -68,7 +68,6 @@ OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float ra
 	return configSpace;
 }
 
-<<<<<<< HEAD
 std::vector<Point<int>> Explore::pickWayPoints(const OccupancyGrid& grid, const std::vector<Point<int>>& points) {
 
 	std::vector< Point<int> > updateWaypoints;
