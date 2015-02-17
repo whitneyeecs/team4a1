@@ -266,7 +266,7 @@ private:
 			pthread_mutex_lock(&state->renderMutex);
 			
 			if (state->im != nullptr) {
-				// resize image fromabout:startpage cells to meters
+				// resize image from cells to meters
 				// then center it
 				eecs467::Point<float> origin = state->grid.originInGlobalFrame();
 				vx_object_t* vim = vxo_chain(
@@ -277,24 +277,24 @@ private:
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
 			}
 
-			if (state->configSpaceIm != nullptr) {
-				// resize image fromabout:startpage cells to meters
-				// then center it
-				eecs467::Point<float> origin = state->grid.originInGlobalFrame();
-				vx_object_t* vim = vxo_chain(
-					vxo_mat_translate3(origin.x, origin.y, 0),
-					vxo_mat_scale((double)state->grid.metersPerCell()),
-					vxo_image_from_u8(state->configSpaceIm, 0,
-					0));
-				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
-			}
+			// if (state->configSpaceIm != nullptr) {
+			// 	// resize image fromabout:startpage cells to meters
+			// 	// then center it
+			// 	eecs467::Point<float> origin = state->grid.originInGlobalFrame();
+			// 	vx_object_t* vim = vxo_chain(
+			// 		vxo_mat_translate3(origin.x, origin.y, 0),
+			// 		vxo_mat_scale((double)state->grid.metersPerCell()),
+			// 		vxo_image_from_u8(state->configSpaceIm, 0,
+			// 		0));
+			// 	vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
+			// }
 
 			//waypoints
 			if (state->wayPoints.size() != 0) {
 				int vec_size = state->wayPoints.size();
 				vx_resc_t* verts = vx_resc_copyf((state->wayPoints).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
-					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_orange, 2.0f)));
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_orange, 8.0f)));
 			}
 
 			//particles

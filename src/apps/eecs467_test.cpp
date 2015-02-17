@@ -20,11 +20,15 @@ int main() {
 	for (int i = 0; i < grid.heightInCells(); ++i) {
 		grid(14, i) = 10;
 	}
-	printGrid(grid); 
+	OccupancyGrid grid2 = grid;
+	grid2(0, 0) = 99;
+
+	printGrid(grid);
 	std::cout << std::endl;
+	printGrid(grid2);
 
-	OccupancyGrid config = Explore::getConfigurationSpace(grid, 0.6);
-	printGrid(config);
+	// OccupancyGrid config = Explore::getConfigurationSpace(grid, 0.6);
+	// printGrid(config);
 
-	printf("\n%d\t%d\n", WALL, EMPTY);
+	// printf("\n%d\t%d\n", WALL, EMPTY);
 }

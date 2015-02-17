@@ -90,6 +90,8 @@ public:
 
 	maebot_particle_map_t toLCM();
 
+	void toLCM(maebot_particle_map_t& map);
+
 	void process();
 
 	bool processing(){ return _processing; }

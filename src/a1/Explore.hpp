@@ -10,6 +10,7 @@
 #include <mapping/occupancy_grid.hpp>
 #include <mapping/occupancy_grid_utils.hpp>
 #include <lcmtypes/maebot_processed_laser_scan_t.hpp>
+#include <lcmtypes/maebot_particle_map_t.hpp>
 
 namespace eecs467 {
 
@@ -27,6 +28,7 @@ enum State : char { EMPTY = 0, WALL = 1 << 4, UNKNOWN = 2 << 4 };
 class Explore {
 private:
 	std::vector<Point<int>> _wayPoints;
+	Point<int> _dest;
 
 	static bool detectObstacle(const OccupancyGrid& grid, 
 		const Point<int>& start, 
@@ -35,9 +37,13 @@ private:
 public:
 	Explore();
 
-	Point<int> getNextWayPoint(const OccupancyGrid& grid, const Point<double>& currPos);
+	bool getNextWayPoint(const OccupancyGrid& grid, 
+		const Point<int>& currPos, 
+		Point<double>& nextWayPoint);
 
 	void clearPath();
+
+	void toLCM(maebot_particle_map_t& map, const OccupancyGrid& grid);
 
 	/**
 	 * @brief generates a configuration space

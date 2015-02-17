@@ -21,11 +21,15 @@
 #include "a1/RobotConstants.hpp"
 #include "a1/Explore.hpp"
 
+using namespace eecs467;
+
 class StateHandler {
 public:
 	eecs467::LaserCorrector laser;
 	eecs467::ParticleFilter pf;
 	eecs467::Mapper mapper;
+	eecs467::Explore pathPlanner;
+	Point<double> nextWayPoint;
 	pthread_mutex_t dataMutex;
 
 	lcm::LCM lcm;
@@ -94,11 +98,36 @@ private:
 			// update map
 			mapper.update(processedScans);
 
-			maebot_particle_map_t pfMsg = pf.toLCM();
+			maebot_particle_map_t pfMsg;
+			pf.toLCM(pfMsg);
+			pathPlanner.toLCM(pfMsg, *mapper.getGrid());
+			pfMsg.num_path++;
+			pfMsg.path_x.push_back(nextWayPoint.x);
+			pfMsg.path_y.push_back(nextWayPoint.y);
 			lcm.publish("MAEBOT_PARTICLE_MAP", &pfMsg);
 		}
 
 		pthread_mutex_unlock(&dataMutex);
+	}
+
+	static void* pathFinderThread(void* arg) {
+		StateHandler* state = (StateHandler*) arg;
+
+		while (1) {
+			pthread_mutex_lock(&state->dataMutex);
+			// getting our current position
+			maebot_pose_t pfPose = state->pf.getBestPose();
+			Point<int> currPos = 
+				global_position_to_grid_cell(Point<double>{pfPose.x, pfPose.y}, 
+					*state->mapper.getGrid());
+
+			state->pathPlanner.getNextWayPoint(*state->mapper.getGrid(),
+				currPos, state->nextWayPoint);
+
+			pthread_mutex_unlock(&state->dataMutex);
+		}
+
+		return NULL;
 	}
 };
 

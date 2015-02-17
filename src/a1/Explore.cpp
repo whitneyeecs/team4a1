@@ -40,36 +40,59 @@ bool Explore::detectObstacle(const OccupancyGrid& grid,
 	return false;
 }
 
-Point<int> Explore::getNextWayPoint(const OccupancyGrid& grid, const Point<double>& currPos) {
+bool Explore::getNextWayPoint(const OccupancyGrid& grid, 
+	const Point<int>& currPos,
+	Point<double>& nextWayPoint) {
 
-	if (_wayPoints.size() != 0) {
-		Point<int> ret = _wayPoints.back();
-		_wayPoints.pop_back();
-		return ret;
-	}
-	OccupancyGrid space = getConfigurationSpace(grid, baseLength / 2);
+	OccupancyGrid space = getConfigurationSpace(grid, baseLength / 2.0f);
+	// need a copy of configspace because the search will modify it
+	OccupancyGrid spaceCopy = space;
 	std::vector<Point<int>> points = breadthFirstSearch(space, currPos);
 
-	//points = pickWayPoints(space, points);
+	// if no path exists, return
+	if (points.size() == 0) {
+		return false;
+	}
+
+	// if we have chosen a different end point, clear queue
+	if (points.front() != _dest) {
+		_wayPoints.clear();
+	}
+
+	points = pickWayPoints(spaceCopy, points);
 
 	_wayPoints = points;
 
-	Point<int> waypoint = _wayPoints.back();
+
+	nextWayPoint = grid_position_to_global_position(_wayPoints.back(), grid);
+	_dest = _wayPoints.front();
 	_wayPoints.pop_back();
-	return waypoint;
+	return true;
 }
 
 void Explore::clearPath() {
 	_wayPoints.clear();
+}
 
+void Explore::toLCM(maebot_particle_map_t& map,
+	const OccupancyGrid& grid) {
+	OccupancyGrid configSpace = getConfigurationSpace(grid, baseLength / 2.0f);
+	map.config_space = configSpace.toLCM();
+	map.num_path = _wayPoints.size();
+	for (auto& point : _wayPoints) {
+		Point<double> dPoint = grid_position_to_global_position(point, grid);
+
+		map.path_x.push_back(dPoint.x);
+		map.path_y.push_back(dPoint.y);
+	}
 }
 
 OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float radius) {
 	eecs467::OccupancyGrid configSpace(grid.widthInMeters(),
 		grid.heightInMeters(), grid.metersPerCell());
 
-	float cellDiagonal = sqrt(2) * grid.metersPerCell();
-	float deltaTheta = (cellDiagonal / 2) / radius;
+	// float cellDiagonal = sqrt(2) * grid.metersPerCell();
+	// float deltaTheta = (cellDiagonal / 2) / radius;
 
 	for (int y = 0; y < (int)grid.heightInCells(); y++) {
 		for (int x = 0; x < (int)grid.widthInCells(); x++) {
@@ -157,6 +180,7 @@ inline bool expandNode(std::deque<Point<int>>& exploreQueue,
 
 std::vector<Point<int>> Explore::breadthFirstSearch(OccupancyGrid& grid, 
 	const Point<int>& currPos) {
+
 	std::deque<Point<int>> exploreQueue;
 	exploreQueue.push_back(currPos);
 	grid(currPos) = NONE;
