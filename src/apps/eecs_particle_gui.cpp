@@ -18,10 +18,11 @@
 #include <lcmtypes/maebot_occupancy_grid_t.hpp>
 #include <lcmtypes/maebot_map_data_t.hpp>
 #include "mapping/occupancy_grid.hpp"
-//#include "lcmtypes/maebot_pose_t.hpp"
 #include "lcmtypes/maebot_particle_map_t.hpp"
-//#include "lcmtypes/maebot_particle_t.hpp"
+
 #include "a1/ParticleFilter.hpp"
+#include "a1/Explore.hpp"
+#include "a1/RobotConstants.hpp"
 
 // core api
 #include "vx/vx.h"
@@ -39,6 +40,7 @@
 
 #include "imagesource/image_u32.h"
 #include "imagesource/image_u8.h"
+#include "imagesource/image_u8x3.h"
 #include "imagesource/image_source.h"
 #include "imagesource/image_convert.h"
 
@@ -47,11 +49,11 @@ public:
 	// drawing stuff
 	eecs467::OccupancyGrid grid;
 	image_u8_t* im;
+	image_u32* configSpaceIm;
 	std::vector<float> path;
 	std::vector<float> prob_path;
 	std::vector<float> pose_path;
 	float counter;
-	float init_time;
 	std::ofstream posefile;
 	std::ofstream probfile;
 	pthread_mutex_t renderMutex;
@@ -96,6 +98,7 @@ public:
 		}
 
 		im = nullptr;
+		configSpaceIm = nullptr;
 
 		lcm.subscribe("MAEBOT_POSE", &StateHandler::handleLcmMessagePose, this);
 
@@ -107,6 +110,10 @@ public:
 		if (im != nullptr) {
 			image_u8_destroy(im);
 		}
+
+		if (configSpaceIm != nullptr) {
+			image_u32_destroy(configSpaceIm);
+		}
 	}
 	
 	void handleLcmMessagePose(const lcm::ReceiveBuffer* rbuf,
@@ -114,9 +121,6 @@ public:
 		const maebot_pose_t* msg) {
 		
 		pthread_mutex_lock(&renderMutex);		
-
-		//if(counter == 1)
-			//init_time = msg->utime;
 
 		if(pose_path.size() == 0)
 			posefile.open ("a1_pose_position.csv", std::ios::out);
@@ -148,6 +152,11 @@ public:
 				im->buf[y * im->stride + x] = (uint8_t) (-grid(x, y) + 127);
 			}
 		}
+
+		if (configSpaceIm == nullptr) {
+			configSpaceIm = image_u32_create(grid.widthInCells(), grid.heightInCells());
+		}
+
 		
 		if(prob_path.size() == 0)
 			probfile.open ("a1_prob_position.csv", std::ios::out);		
@@ -265,16 +274,6 @@ private:
 					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_black, 2.0f)));
 			}
 
-
-
-/*			if (state->lidar_rays.size() != 0) {
-				int vec_size = state->lidar_rays.size();
-				vx_resc_t* verts = vx_resc_copyf((state->lidar_rays).data(), vec_size);
-				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
-					vxo_lines(verts, vec_size / 3, GL_LINES,
-						vxo_lines_style(vx_green, 2.0f)));
-			}
-*/
 			pthread_mutex_unlock(&state->renderMutex);
 			
 			vx_buffer_swap(vx_world_get_buffer(state->vxworld, "state"));

@@ -2,6 +2,7 @@
 #include "a1/RobotConstants.hpp"
 #include "a1/SlamConstants.hpp"
 #include "a1/LaserCorrector.hpp"
+#include "a1/Explore.hpp"
 
 #include "math/gsl_util.h"
 #include "math/gsl_util_rand.h"
@@ -57,6 +58,8 @@ eecs467::ParticleFilter::toLCM(){
 	maebot_particle_map_t msg;
 	msg.utime = _prior.front().pose.utime;
 	msg.grid = _sensorModel.getGrid()->toLCM();
+	msg.config_space = eecs467::Explore::getConfigurationSpace(*_sensorModel.getGrid(), 
+		eecs467::baseLength / 2.0f).toLCM();
 	msg.num_particles = (int32_t)_prior.size();
 	msg.particles = _prior;
 	return msg;

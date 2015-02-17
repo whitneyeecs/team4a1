@@ -1,7 +1,9 @@
-#include "Explore.hpp"
 #include "math/angle_functions.hpp"
 #include "a1/SlamConstants.hpp"
 #include "a1/RobotConstants.hpp"
+#include "a1/Explore.hpp"
+
+#include <deque>
 
 namespace eecs467 {
 
@@ -21,6 +23,10 @@ Point<int> Explore::getNextWayPoint(const OccupancyGrid& grid, const Point<doubl
 	_wayPoints.pop_back();
 
 	return waypoint;
+}
+
+void Explore::clearPath() {
+	_wayPoints.clear();
 
 }
 
@@ -45,8 +51,16 @@ OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float ra
 					Point<int> gridEdgePt = 
 						global_position_to_grid_cell(edgePt, grid);
 						if (grid.isCellInGrid(gridEdgePt.x, gridEdgePt.y)) {
-							configSpace(gridEdgePt.x, gridEdgePt.y) = 0xFF;
+							configSpace(gridEdgePt.x, gridEdgePt.y) = WALL;
 						}
+				}
+			} else if (grid(x, y) < eecs467::emptyThreshold) {
+				if (state(configSpace(x, y)) != WALL) {
+					configSpace(x, y) = EMPTY;
+				}
+			} else {
+				if (state(configSpace(x, y)) != WALL) {
+					configSpace(x, y) = UNKNOWN;
 				}
 			}
 		}
@@ -54,6 +68,7 @@ OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float ra
 	return configSpace;
 }
 
+<<<<<<< HEAD
 std::vector<Point<int>> Explore::pickWayPoints(const OccupancyGrid& grid, const std::vector<Point<int>>& points) {
 
 	std::vector< Point<int> > updateWaypoints;
@@ -83,8 +98,73 @@ std::vector<Point<int>> Explore::pickWayPoints(const OccupancyGrid& grid, const 
 	return updateWaypoints;
 }
 
-std::vector<Point<int>> Explore::breadthFirstSearch(const OccupancyGrid& grid, const Point<double>& currPos) {
+std::vector<Point<int>> Explore::breadthFirstSearch(OccupancyGrid& grid, 
+	const Point<int>& currPos) {
+	std::deque<Point<int>> exploreQueue;
+	exploreQueue.push_back(currPos);
+	grid(currPos) = NONE;
 
+	while (!exploreQueue.empty()) {
+		Point<int> currPoint = exploreQueue.front();
+		if (state(grid(currPoint)) == UNKNOWN) {
+			break;
+		}
+
+		exploreQueue.pop_front();
+
+		// left
+		if (currPoint.x > 0 && 
+			state(grid(currPoint.x - 1, currPoint.y)) == EMPTY) {
+			exploreQueue.push_back(Point<int>{currPoint.x - 1, currPoint.y});
+			grid(currPoint.x - 1, currPoint.y) = WALL | RIGHT;
+		}
+		// right
+		if (currPoint.x < grid.widthInCells() -1 && 
+			state(grid(currPoint.x + 1, currPoint.y)) == EMPTY) {
+			exploreQueue.push_back(Point<int>{currPoint.x + 1, currPoint.y});
+			grid(currPoint.x + 1, currPoint.y) = WALL | LEFT;
+		}
+		// down
+		if (currPoint.y > 0 &&
+			state(grid(currPoint.x, currPoint.y - 1)) == EMPTY) {
+			exploreQueue.push_back(Point<int>{currPoint.x, currPoint.y - 1});
+			grid(currPoint.x, currPoint.y - 1) = WALL | UP;
+		}
+		// up
+		if (currPoint.y < grid.heightInCells() - 1 &&
+			state(grid(currPoint.x, currPoint.y + 1)) == EMPTY) {
+			exploreQueue.push_back(Point<int>{currPoint.x, currPoint.y + 1});
+			grid(currPoint.x, currPoint.y + 1) = WALL | DOWN;
+		}
+	}
+	std::vector<Point<int>> path;
+
+	if (exploreQueue.empty()) {
+		// no path found
+		return path;
+	}
+
+	Point<int> pathPoint = exploreQueue.front();
+	while (dir(grid(pathPoint)) != NONE) {
+		path.push_back(pathPoint);
+		switch (dir(grid(pathPoint))) {
+			case LEFT:
+				pathPoint.x -= 1;
+				break;
+			case RIGHT:
+				pathPoint.x += 1;
+				break;
+			case DOWN:
+				pathPoint.y -= 1;
+				break;
+			case UP:
+				pathPoint.y += 1;
+				break;
+		}
+	}
+
+	return path;
 }
+
 
 }

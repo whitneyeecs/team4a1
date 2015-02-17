@@ -142,7 +142,11 @@ public:
     * \param    y           y-coordinate of the cell
     * \return   A mutable reference to the cell (x,y)'s logOdds.
     */
-    CellOdds& operator()(int x, int y)       { return cells_[cellIndex(x, y)]; }
+    CellOdds& operator()(int x, int y) { return cells_[cellIndex(x, y)]; }
+
+    CellOdds& operator()(const Point<int>& point) {
+        return cells_[cellIndex(point.x, point.y)];
+    }
     
     /**
     * operator() provides unchecked access to the cell located at (x,y). If the cell isn't contained in the grid,
@@ -152,7 +156,11 @@ public:
     * \param    y           y-coordinate of the cell
     * \return   The logOdds of cell (x, y).
     */
-    CellOdds  operator()(int x, int y) const { return cells_[cellIndex(x, y)]; }
+    CellOdds operator()(int x, int y) const { return cells_[cellIndex(x, y)]; }
+
+    CellOdds operator()(const Point<int>& point) const {
+        return cells_[cellIndex(point.x, point.y)];
+    }
 
     /**
     * toLCM creates an LCM message from the grid.

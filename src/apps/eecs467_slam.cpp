@@ -18,6 +18,8 @@
 #include "a1/ParticleFilter.hpp"
 #include "a1/Mapper.hpp"
 #include "a1/SlamConstants.hpp"
+#include "a1/RobotConstants.hpp"
+#include "a1/Explore.hpp"
 
 class StateHandler {
 public:
