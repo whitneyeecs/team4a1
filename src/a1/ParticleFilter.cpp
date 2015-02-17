@@ -68,6 +68,9 @@ eecs467::ParticleFilter::toLCM(){
 	Point<double> bestPosePt{bestPose.x, bestPose.y};
 	Point<int> bestGridPt = global_position_to_grid_cell(bestPosePt, *_sensorModel.getGrid());
 	std::vector<Point<int>> path = Explore::breadthFirstSearch(configSpace, bestGridPt);
+	configSpace = eecs467::Explore::getConfigurationSpace(*_sensorModel.getGrid(), 
+		eecs467::baseLength / 2.0f);
+	path = Explore::pickWayPoints(configSpace, path);
 	msg.num_path = path.size();
 	for (auto& point : path) {
 		Point<double> dPoint = grid_position_to_global_position(point, configSpace);

@@ -277,17 +277,17 @@ private:
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
 			}
 
-			// if (state->configSpaceIm != nullptr) {
-			// 	// resize image fromabout:startpage cells to meters
-			// 	// then center it
-			// 	eecs467::Point<float> origin = state->grid.originInGlobalFrame();
-			// 	vx_object_t* vim = vxo_chain(
-			// 		vxo_mat_translate3(origin.x, origin.y, 0),
-			// 		vxo_mat_scale((double)state->grid.metersPerCell()),
-			// 		vxo_image_from_u8(state->configSpaceIm, 0,
-			// 		0));
-			// 	vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
-			// }
+			if (state->configSpaceIm != nullptr) {
+				// resize image fromabout:startpage cells to meters
+				// then center it
+				eecs467::Point<float> origin = state->grid.originInGlobalFrame();
+				vx_object_t* vim = vxo_chain(
+					vxo_mat_translate3(origin.x, origin.y, 0),
+					vxo_mat_scale((double)state->grid.metersPerCell()),
+					vxo_image_from_u8(state->configSpaceIm, 0,
+					0));
+				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
+			}
 
 			//waypoints
 			if (state->wayPoints.size() != 0) {

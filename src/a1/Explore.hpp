@@ -4,6 +4,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "a1/SlamConstants.hpp"
+
 #include <math/point.hpp>
 #include <mapping/occupancy_grid.hpp>
 #include <mapping/occupancy_grid_utils.hpp>
@@ -25,6 +27,10 @@ enum State : char { EMPTY = 0, WALL = 1 << 4, UNKNOWN = 2 << 4 };
 class Explore {
 private:
 	std::vector<Point<int>> _wayPoints;
+
+	static bool detectObstacle(const OccupancyGrid& grid, 
+		const Point<int>& start, 
+		const Point<int>& end, double steps);
 
 public:
 	Explore();

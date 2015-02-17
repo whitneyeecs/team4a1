@@ -9,12 +9,59 @@ namespace eecs467 {
 
 Explore::Explore() { }
 
+bool Explore::detectObstacle(const OccupancyGrid& grid, 
+	const Point<int>& start, 
+	const Point<int>& end, double steps){
+
+	Point<int> cellPos;
+	
+	Point<double> point;
+	point.x = start.x;
+	point.y = start.y;
+	
+	Point<double> endpoint;
+	endpoint.x = end.x;
+	endpoint.y = end.y; 
+
+	float stepx = (endpoint.x - point.x) / steps;
+	float stepy = (endpoint.y - point.y) / steps;
+
+	for(unsigned int i = 1; i < steps; i++)  {
+		point.x += stepx;
+		point.y += stepy;
+
+		Point<int> cellPos = Point<int>{(int)point.x,
+			(int)point.y};
+		
+		if (state(grid(cellPos.x, cellPos.y)) == WALL) {
+			return true;
+		}
+	}
+	return false;
+}
+
 Point<int> Explore::getNextWayPoint(const OccupancyGrid& grid, const Point<double>& currPos) {
-	return Point<int>();
+
+	if (_wayPoints.size() != 0) {
+		Point<int> ret = _wayPoints.back();
+		_wayPoints.pop_back();
+		return ret;
+	}
+	OccupancyGrid space = getConfigurationSpace(grid, baseLength / 2);
+	std::vector<Point<int>> points = breadthFirstSearch(space, currPos);
+
+	//points = pickWayPoints(space, points);
+
+	_wayPoints = points;
+
+	Point<int> waypoint = _wayPoints.back();
+	_wayPoints.pop_back();
+	return waypoint;
 }
 
 void Explore::clearPath() {
 	_wayPoints.clear();
+
 }
 
 OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float radius) {
@@ -66,11 +113,35 @@ OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float ra
 
 std::vector<Point<int>> Explore::pickWayPoints(const OccupancyGrid& grid, 
 	const std::vector<Point<int>>& points) {
-	return std::vector<Point<int>>();
+
+	std::vector<Point<int>> updateWaypoints;
+	if (points.size() == 0) {
+		return updateWaypoints;
+	}
+
+	Point<int> startPoint;
+	Point<int> checkPoint;
+
+	int s = 0; //index of startPoint
+	startPoint = points[s];
+	updateWaypoints.push_back(startPoint);	
+
+	for(unsigned int i = 1; i < points.size(); i++) {
+		checkPoint = points[i];
+		int step = i - s; //# of steps checkpoint is away from startpoint
+
+		if(detectObstacle(grid, startPoint, checkPoint, step * 2)) {
+			updateWaypoints.push_back(points[i - 1]);
+			startPoint = points[i - 1];
+			s = i - 1; //update index of startpoint
+		}
+	}
+	return updateWaypoints;
 }
 
 // helper function for breadth first search
-inline bool expandNode(std::deque<Point<int>>& exploreQueue, OccupancyGrid& grid, int x, int y, Point<int>& pathPoint, Direction dir) {
+inline bool expandNode(std::deque<Point<int>>& exploreQueue, 
+	OccupancyGrid& grid, int x, int y, Point<int>& pathPoint, Direction dir) {
 	if (grid.isCellInGrid(x, y) &&
 		state(grid(x, y)) != WALL) {
 		if (state(grid(x, y)) == UNKNOWN) {
@@ -96,19 +167,23 @@ std::vector<Point<int>> Explore::breadthFirstSearch(OccupancyGrid& grid,
 		exploreQueue.pop_front();
 
 		// left
-		if (expandNode(exploreQueue, grid, currPoint.x - 1, currPoint.y, pathPoint, RIGHT)) {
+		if (expandNode(exploreQueue, grid, 
+			currPoint.x - 1, currPoint.y, pathPoint, RIGHT)) {
 			break;
 		}
 		// right
-		if (expandNode(exploreQueue, grid, currPoint.x + 1, currPoint.y, pathPoint, LEFT)) {
+		if (expandNode(exploreQueue, grid, 
+			currPoint.x + 1, currPoint.y, pathPoint, LEFT)) {
 			break;
 		}
 		// down
-		if (expandNode(exploreQueue, grid, currPoint.x, currPoint.y - 1, pathPoint, UP)) {
+		if (expandNode(exploreQueue, grid, 
+			currPoint.x, currPoint.y - 1, pathPoint, UP)) {
 			break;
 		}
 		// up
-		if (expandNode(exploreQueue, grid, currPoint.x, currPoint.y + 1, pathPoint, DOWN)) {
+		if (expandNode(exploreQueue, grid, 
+			currPoint.x, currPoint.y + 1, pathPoint, DOWN)) {
 			break;
 		}
 	}
@@ -139,5 +214,6 @@ std::vector<Point<int>> Explore::breadthFirstSearch(OccupancyGrid& grid,
 
 	return path;
 }
+
 
 }
