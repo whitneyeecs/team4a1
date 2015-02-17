@@ -73,9 +73,9 @@ static const float gridSeparationSize = 1; // in cells
 
 //navigation
 static const float Kp = 0.5;
-static const float Kd = 1.0;
+static const float Kd = 4.0;
 static const float target_radius = 0.1;
-static const float correct_scale = 1;
+static const float correct_scale = 0.40;
 }
 
 #endif /* SLAM_CONSTANTS_HPP */

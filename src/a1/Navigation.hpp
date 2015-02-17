@@ -18,6 +18,7 @@ namespace eecs467{
 class Navigation{
 private:
 	bool _driving;
+	bool _turning;
 
 	//size 2. [0] = origin, [1] = dest
 	std::vector<Point<float>> _line;
@@ -27,14 +28,10 @@ private:
 	maebot_pose_t _pose;
 	maebot_motor_feedback_t _odo;
 
-	pthread_mutex_t _cmdLock;
 
 	//used for control
 	float _prev_error;
 
-private:
-
-void turn(float angle, lcm::LCM& lcm);
 
 public:
 
@@ -43,33 +40,22 @@ Navigation();
 // pushOdometry()
 //pushes most current odometery
 //
-void pushOdometry(const maebot_motor_feedback_t& odo) { _odo = odo; }
+void pushOdometry(const maebot_motor_feedback_t& odo) { _odo = odo;}// printf("pushed odemetry\n"); }
 
 
 // pushPose()
 //pushes most probable pose after every particle filter iteration
 //this pose will be used for navigating
 //
-void pushPose(const maebot_pose_t& pose) { _pose = pose; }
+void pushPose(const maebot_pose_t& pose) { _pose = pose; printf("pushed pose, theta is:\t%f\tx:\t%f\ty:\t%f\n", pose.theta, pose.x, pose.y); }
 
-// driving()
-//returns true when destination has been set
-//but not met
-//
 bool driving(){ return _driving; }
 
-// driveTo()
-//primary function. drives straight line from 
-//current position to dest
-//does not check to see if it is traversable
-//
-void driveTo(Point<float> dest, lcm::LCM& lcm);
+void driveTo(Point<float> dest);
 
-// correct()
-//implements a line following feedback control
-//stops when target is reached
-void correct(lcm::LCM& lcm);
+maebot_motor_command_t correct(bool& driving);
 
+bool turning(){ return _turning; }
 
 };//end class
 }//end namespace

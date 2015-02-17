@@ -7,7 +7,7 @@
 
 namespace eecs467 {
 
-static const float go = 0.25;
+static const float go = 0.22;
 static const float stop = 0.0;
 static const float circumference = 0.25132741228;
 static const float baseLength = 0.08; // meters
