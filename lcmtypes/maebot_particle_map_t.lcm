@@ -8,4 +8,8 @@ struct maebot_particle_map_t
 	
 	int32_t num_particles;
 	maebot_particle_t particles[num_particles];
+
+	int32_t num_path;
+	float path_x[num_path];
+	float path_y[num_path];
 }

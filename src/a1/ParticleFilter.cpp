@@ -58,10 +58,22 @@ eecs467::ParticleFilter::toLCM(){
 	maebot_particle_map_t msg;
 	msg.utime = _prior.front().pose.utime;
 	msg.grid = _sensorModel.getGrid()->toLCM();
-	msg.config_space = eecs467::Explore::getConfigurationSpace(*_sensorModel.getGrid(), 
-		eecs467::baseLength / 2.0f).toLCM();
+	OccupancyGrid configSpace = eecs467::Explore::getConfigurationSpace(*_sensorModel.getGrid(), 
+		eecs467::baseLength / 2.0f);
+	msg.config_space = configSpace.toLCM();
 	msg.num_particles = (int32_t)_prior.size();
 	msg.particles = _prior;
+
+	maebot_pose_t bestPose = getBestPose();
+	Point<double> bestPosePt{bestPose.x, bestPose.y};
+	Point<int> bestGridPt = global_position_to_grid_cell(bestPosePt, *_sensorModel.getGrid());
+	std::vector<Point<int>> path = Explore::breadthFirstSearch(configSpace, bestGridPt);
+	msg.num_path = path.size();
+	for (auto& point : path) {
+		Point<double> dPoint = grid_position_to_global_position(point, configSpace);
+		msg.path_x.push_back(dPoint.x);
+		msg.path_y.push_back(dPoint.y);
+	}
 	return msg;
 }
 

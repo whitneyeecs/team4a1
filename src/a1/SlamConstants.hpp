@@ -33,8 +33,8 @@ static const int emptyEvidenceStrength = 2;
 static const int occupiedEvidenceStrength = 1;
 
 // action model constants
-static const float actionModelK1 = 0.01;
-static const float actionModelK2 = 0.1;
+static const float actionModelK1 = 0.08;
+static const float actionModelK2 = 0.3;
 
 static const float sensorModelStepsPerLaser = 5;
 static const float odometryCompensateThreshold = -400;
@@ -62,8 +62,8 @@ static const float sensorEndOpen = 1.5;
 static const float sensorEndUnexplored = 0;
 
 // thresholds for whether something is counted as a wall or empty space
-static const int wallThreshold = 100;
-static const int emptyThreshold = -100;
+static const int wallThreshold = 40;
+static const int emptyThreshold = -40;
 
 // grid stuff
 static const float gridWidthMeters = 5;

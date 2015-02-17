@@ -48,11 +48,13 @@ class StateHandler {
 public:
 	// drawing stuff
 	eecs467::OccupancyGrid grid;
+	eecs467::OccupancyGrid configSpaceGrid;
 	image_u8_t* im;
-	image_u32* configSpaceIm;
+	image_u8_t* configSpaceIm;
 	std::vector<float> path;
 	std::vector<float> prob_path;
 	std::vector<float> pose_path;
+	std::vector<float> wayPoints;
 	float counter;
 	std::ofstream posefile;
 	std::ofstream probfile;
@@ -112,7 +114,7 @@ public:
 		}
 
 		if (configSpaceIm != nullptr) {
-			image_u32_destroy(configSpaceIm);
+			image_u8_destroy(configSpaceIm);
 		}
 	}
 	
@@ -154,10 +156,31 @@ public:
 		}
 
 		if (configSpaceIm == nullptr) {
-			configSpaceIm = image_u32_create(grid.widthInCells(), grid.heightInCells());
+			configSpaceIm = image_u8_create(grid.widthInCells(), grid.heightInCells());
 		}
 
-		
+		configSpaceGrid.fromLCM(msg->config_space);
+		for (unsigned int y = 0; y < configSpaceGrid.heightInCells(); ++y){
+			for (unsigned int x = 0; x < configSpaceGrid.widthInCells(); ++x) {
+				if (state(configSpaceGrid(x, y)) == eecs467::WALL) {
+					// configSpaceIm->buf[y * im->stride + x] = (0x0F << 24) | (0xFF);
+					configSpaceIm->buf[y * im->stride + x] = 0;
+				} else if (state(configSpaceGrid(x, y)) == eecs467::UNKNOWN) {
+					// configSpaceIm->buf[y * im->stride + x] = (0x0F << 24) | (0xFF << 8);
+					configSpaceIm->buf[y * im->stride + x] = 126;
+				} else {
+					configSpaceIm->buf[y * im->stride + x] = 255;
+				}
+			}
+		}
+
+		wayPoints.clear();
+		for (int i = 0; i < msg->num_path; ++i) {
+			wayPoints.push_back(msg->path_x[i]);
+			wayPoints.push_back(msg->path_y[i]);
+			wayPoints.push_back(0.02);
+		}
+
 		if(prob_path.size() == 0)
 			probfile.open ("a1_prob_position.csv", std::ios::out);		
 
@@ -165,7 +188,9 @@ public:
 		prob_path.push_back(msg->particles[0].pose.y);
 		prob_path.push_back(0.0f);
 
-		probfile << msg->particles[0].pose.x << " " << msg->particles[0].pose.y << " " << (msg->particles[0].pose.utime >> 9) << "\n";
+		probfile << msg->particles[0].pose.x << " " 
+			<< msg->particles[0].pose.y << " " 
+			<< (msg->particles[0].pose.utime >> 9) << "\n";
 	
 		path.clear();
 		unsigned int i = 0;
@@ -250,6 +275,26 @@ private:
 					vxo_image_from_u8(state->im, 0,
 					0));
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
+			}
+
+			// if (state->configSpaceIm != nullptr) {
+			// 	// resize image fromabout:startpage cells to meters
+			// 	// then center it
+			// 	eecs467::Point<float> origin = state->grid.originInGlobalFrame();
+			// 	vx_object_t* vim = vxo_chain(
+			// 		vxo_mat_translate3(origin.x, origin.y, 0),
+			// 		vxo_mat_scale((double)state->grid.metersPerCell()),
+			// 		vxo_image_from_u8(state->configSpaceIm, 0,
+			// 		0));
+			// 	vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
+			// }
+
+			//waypoints
+			if (state->wayPoints.size() != 0) {
+				int vec_size = state->wayPoints.size();
+				vx_resc_t* verts = vx_resc_copyf((state->wayPoints).data(), vec_size);
+				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
+					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_orange, 2.0f)));
 			}
 
 			//particles
