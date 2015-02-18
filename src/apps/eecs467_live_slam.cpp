@@ -163,25 +163,35 @@ printf("turn?:\t%d\n", turn);
 
 		while(1){
 			if(state->pf.initialized()){
-				if(!state->driving){
-					const OccupancyGrid& grid = *state->mapper.getGrid();
 
-					pthread_mutex_lock(&state->dataMutex);
-					// getting our current position
-					maebot_pose_t pfPose = state->pf.getBestPose();
-					Point<int> currPos = 
-						global_position_to_grid_cell(Point<double>{pfPose.x, pfPose.y}, 
-							grid);
-					// get the next waypoint
-					if (!state->pathPlanner.getNextWayPoint(grid,
-						currPos, state->wayPoint)) {
-						// stop
+				const OccupancyGrid& grid = *state->mapper.getGrid();
+				if (state->driving) {
+					Point<int> dest;
+					if (!state->pathPlanner.getCurrentDestination(dest)) {
 						continue;
 					}
-					state->driving = true;
-					state->nav.driveTo(state->wayPoint);
-					pthread_mutex_unlock(&state->dataMutex);
+					if (grid(dest) < wallThreshold && grid(dest) > emptyThreshold) {
+						continue;
+					}
 				}
+				// if(!state->driving){
+
+				pthread_mutex_lock(&state->dataMutex);
+				// getting our current position
+				maebot_pose_t pfPose = state->pf.getBestPose();
+				Point<int> currPos = 
+					global_position_to_grid_cell(Point<double>{pfPose.x, pfPose.y}, 
+						grid);
+				// get the next waypoint
+				if (!state->pathPlanner.getNextWayPoint(grid,
+					currPos, state->wayPoint)) {
+					// stop
+					continue;
+				}
+				state->driving = true;
+				state->nav.driveTo(state->wayPoint);
+				pthread_mutex_unlock(&state->dataMutex);
+				// }
 			}
 			usleep(1000000);
 		}
