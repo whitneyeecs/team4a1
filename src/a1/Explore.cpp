@@ -43,7 +43,6 @@ bool Explore::detectObstacle(const OccupancyGrid& grid,
 bool Explore::getNextWayPoint(const OccupancyGrid& grid, 
 	const Point<int>& currPos,
 	Point<double>& nextWayPoint) {
-
 	OccupancyGrid space = getConfigurationSpace(grid, safetyRadius);
 	// need a copy of configspace because the search will modify it
 	OccupancyGrid spaceCopy = space;
@@ -51,15 +50,33 @@ bool Explore::getNextWayPoint(const OccupancyGrid& grid,
 
 	points = pickWayPoints(spaceCopy, points);
 
-	// if no path exists, return
 	if (points.size() == 0) {
 		return false;
 	}
 
 	_wayPoints = points;
+	_dest = points.front();
 
-	nextWayPoint = grid_position_to_global_position(_wayPoints.back(), grid);
-	_wayPoints.pop_back();
+	float distance;
+	do {
+		// if no path exists, return
+		if (points.size() == 0) {
+			return false;
+		}
+		nextWayPoint = grid_position_to_global_position(_wayPoints.back(), grid);
+		_wayPoints.pop_back();
+		Point<double> dCurrPos = Point<double>{(double)currPos.x, (double)currPos.y};
+		distance = distance_between_points(nextWayPoint, dCurrPos);
+	} while (distance < target_radius);
+	return true;
+}
+
+bool Explore::getCurrentDestination(Point<int>& dest) const {
+	if (_wayPoints.size() == 0) {
+		return false;
+	}
+
+	dest = _dest;
 	return true;
 }
 
@@ -151,6 +168,7 @@ std::vector<Point<int>> Explore::pickWayPoints(const OccupancyGrid& grid,
 			updateWaypoints.push_back(points[i - 1]);
 			startPoint = points[i - 1];
 			s = i - 1; //update index of startpoint
+			i--;
 		}
 	}
 	return updateWaypoints;

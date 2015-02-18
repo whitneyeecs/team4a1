@@ -28,6 +28,7 @@ enum State : char { EMPTY = 0, WALL = 1 << 4, UNKNOWN = 2 << 4 };
 class Explore {
 private:
 	std::vector<Point<int>> _wayPoints;
+	Point<int> _dest;
 
 	static bool detectObstacle(const OccupancyGrid& grid, 
 		const Point<int>& start, 
@@ -39,6 +40,8 @@ public:
 	bool getNextWayPoint(const OccupancyGrid& grid, 
 		const Point<int>& currPos, 
 		Point<double>& nextWayPoint);
+
+	bool getCurrentDestination(Point<int>& dest) const;
 
 	void clearPath();
 

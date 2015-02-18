@@ -44,7 +44,10 @@ void pushOdometry(const maebot_motor_feedback_t& odo) { _odo = odo;}// printf("p
 //pushes most probable pose after every particle filter iteration
 //this pose will be used for navigating
 //
-void pushPose(const maebot_pose_t& pose) { _pose = pose; printf("pushed pose, theta is:\t%f\tx:\t%f\ty:\t%f\n", pose.theta, pose.x, pose.y); }
+void pushPose(const maebot_pose_t& pose) { 
+	_pose = pose; 
+	// printf("pushed pose, theta is:\t%f\tx:\t%f\ty:\t%f\n", pose.theta, pose.x, pose.y); 
+}
 
 bool driving(){ return _driving; }
 
