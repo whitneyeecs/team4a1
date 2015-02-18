@@ -67,12 +67,17 @@ printf("target angle:\t%f\n", target_angle);
 
 	cmd.motor_left_speed = go;
 	cmd.motor_right_speed = go * (1.0  + correct * correct_scale);
-	if(cmd.motor_right_speed > .35)
-		cmd.motor_right_speed = .35;
-	if(cmd.motor_right_speed < 0.14)
-		cmd.motor_right_speed = 0.14;
+	if(correct > .25){
+		cmd.motor_right_speed = go * 0.7;
+		cmd.motor_left_speed = go * -0.7;
+	}
+	if(correct  < -0.25){
+		cmd.motor_right_speed = go * -0.7;
+		cmd.motor_left_speed = go * 0.7;
+	}
 printf("correct is:\t%f\n", correct);
 printf("left motor:\t%f\tright motor:\t%f\n\n\n",cmd.motor_left_speed,cmd.motor_right_speed); 
+	
 	return cmd;
 
 

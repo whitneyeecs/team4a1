@@ -193,19 +193,28 @@ printf("turn?:\t%d\n", turn);
 		StateHandler* state = (StateHandler*) arg;
 		while(1){
 			pthread_mutex_lock(&state->dataMutex);
-			if(state->command.motor_right_speed > .26 || state->command.motor_right_speed < .17){
-				for(int i = 0; i < 500; ++i) {
+			if(state->command.motor_right_speed == 0.7 * eecs467::go || state->command.motor_right_speed == -0.7 * eecs467::go){
+				for(int i = 0; i < 5; ++i) {
 					state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
 				}
 				pthread_mutex_unlock(&state->dataMutex);
-				usleep(4000000);
+//				state->command.motor_left_speed = eecs467::stop;
+//				state->command.motor_right_speed = eecs467::stop;
+//				
+//				usleep(10000);
+				
+//				pthread_mutex_lock(&state->dataMutex);
+//				state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
+//				pthread_mutex_unlock(&state->dataMutex);
+
+				usleep(3000000);
 				continue;
 			} else {
-				for (int i = 0; i < 900; ++i) {
+		//		for (int i = 0; i < 1000; ++i) {
 					state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
-				}
+		//		}
 				pthread_mutex_unlock(&state->dataMutex);
-				usleep(1000000);
+				usleep(150000);
 				continue;
 			}
 			pthread_mutex_unlock(&state->dataMutex);
