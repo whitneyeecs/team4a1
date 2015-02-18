@@ -56,6 +56,8 @@ public:
 	std::vector<float> pose_path;
 	std::vector<float> wayPoints;
 	float counter;
+	float prevX;
+	float prevY;
 	std::ofstream posefile;
 	std::ofstream probfile;
 	pthread_mutex_t renderMutex;
@@ -83,6 +85,8 @@ public:
 		vxapp.display_finished = display_finished;
 
 		counter = 0;
+		prevX = -1000;
+		prevY = -1000;
 
 		if (pthread_mutex_init(&vxmutex, NULL)) {
 			printf("state mutex not initialized\n");
@@ -187,11 +191,15 @@ public:
 		prob_path.push_back(msg->particles[0].pose.x);
 		prob_path.push_back(msg->particles[0].pose.y);
 		prob_path.push_back(0.0f);
+		
 
-		probfile << msg->particles[0].pose.x << " " 
-			<< msg->particles[0].pose.y << " " 
-			<< (msg->particles[0].pose.utime >> 9) << "\n";
+		if( (msg->particles[0].pose.x != prevX) || (msg->particles[0].pose.y != prevY) )
+			probfile << msg->particles[0].pose.x << " " 
+				<< msg->particles[0].pose.y << " " << (msg->particles[0].pose.utime >> 9) << std::endl;
 	
+		prevX = msg->particles[0].pose.x;
+		prevY = msg->particles[0].pose.y;
+
 		path.clear();
 		unsigned int i = 0;
 		if (path.size() == 0 && msg->num_particles != 0) {
