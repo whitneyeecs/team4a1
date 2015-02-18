@@ -44,28 +44,21 @@ bool Explore::getNextWayPoint(const OccupancyGrid& grid,
 	const Point<int>& currPos,
 	Point<double>& nextWayPoint) {
 
-	OccupancyGrid space = getConfigurationSpace(grid, baseLength / 2.0f);
+	OccupancyGrid space = getConfigurationSpace(grid, safetyRadius);
 	// need a copy of configspace because the search will modify it
 	OccupancyGrid spaceCopy = space;
 	std::vector<Point<int>> points = breadthFirstSearch(space, currPos);
+
+	points = pickWayPoints(spaceCopy, points);
 
 	// if no path exists, return
 	if (points.size() == 0) {
 		return false;
 	}
 
-	// if we have chosen a different end point, clear queue
-	if (points.front() != _dest) {
-		_wayPoints.clear();
-	}
-
-	points = pickWayPoints(spaceCopy, points);
-
 	_wayPoints = points;
 
-
 	nextWayPoint = grid_position_to_global_position(_wayPoints.back(), grid);
-	_dest = _wayPoints.front();
 	_wayPoints.pop_back();
 	return true;
 }
@@ -76,7 +69,7 @@ void Explore::clearPath() {
 
 void Explore::toLCM(maebot_particle_map_t& map,
 	const OccupancyGrid& grid) {
-	OccupancyGrid configSpace = getConfigurationSpace(grid, baseLength / 2.0f);
+	OccupancyGrid configSpace = getConfigurationSpace(grid, safetyRadius);
 	map.config_space = configSpace.toLCM();
 	map.num_path = _wayPoints.size();
 	for (auto& point : _wayPoints) {
@@ -91,35 +84,36 @@ OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float ra
 	eecs467::OccupancyGrid configSpace(grid.widthInMeters(),
 		grid.heightInMeters(), grid.metersPerCell());
 
-	// float cellDiagonal = sqrt(2) * grid.metersPerCell();
-	// float deltaTheta = (cellDiagonal / 2) / radius;
+	float cellDiagonal = sqrt(2) * grid.metersPerCell();
+	float deltaTheta = (cellDiagonal / 2) / radius;
 
 	for (int y = 0; y < (int)grid.heightInCells(); y++) {
 		for (int x = 0; x < (int)grid.widthInCells(); x++) {
 			// draw circle around point
 			if (grid(x, y) > eecs467::wallThreshold) {
-				// Point<int> gridOriginPt{x, y};
-				// Point<double> globalOriginPt = 
-				// 	grid_position_to_global_position(gridOriginPt, grid);
-				// for (float theta = 0; theta < 2 * M_PI; 
-				// 	theta += deltaTheta) {
-				// 	Point<double> edgePt{globalOriginPt.x + cos(theta), 
-				// 		globalOriginPt.y + sin(theta)};
-				// 	Point<int> gridEdgePt = 
-				// 		global_position_to_grid_cell(edgePt, grid);
-				// 		if (grid.isCellInGrid(gridEdgePt.x, gridEdgePt.y)) {
-				// 			configSpace(gridEdgePt.x, gridEdgePt.y) = WALL;
-				// 		}
-				// }
-				configSpace(x, y) = WALL;
-				configSpace(x - 1, y) = WALL;
-				configSpace(x + 1, y) = WALL;
-				configSpace(x, y - 1) = WALL;
-				configSpace(x, y + 1) = WALL;
-				configSpace(x + 1, y + 1) = WALL;
-				configSpace(x + 1, y - 1) = WALL;
-				configSpace(x - 1, y + 1) = WALL;
-				configSpace(x - 1, y - 1) = WALL;
+				Point<int> gridOriginPt{x, y};
+				Point<double> globalOriginPt = 
+					grid_position_to_global_position(gridOriginPt, grid);
+				for (float theta = 0; theta < 2 * M_PI; 
+					theta += deltaTheta) {
+					Point<double> edgePt{globalOriginPt.x + radius * cos(theta), 
+						globalOriginPt.y + radius * sin(theta)};
+					Point<int> gridEdgePt = 
+						global_position_to_grid_cell(edgePt, grid);
+						if (grid.isCellInGrid(gridEdgePt.x, gridEdgePt.y)) {
+							configSpace(gridEdgePt.x, gridEdgePt.y) = WALL;
+						}
+				}
+
+				// configSpace(x, y) = WALL;
+				// configSpace(x - 1, y) = WALL;
+				// configSpace(x + 1, y) = WALL;
+				// configSpace(x, y - 1) = WALL;
+				// configSpace(x, y + 1) = WALL;
+				// configSpace(x + 1, y + 1) = WALL;
+				// configSpace(x + 1, y - 1) = WALL;
+				// configSpace(x - 1, y + 1) = WALL;
+				// configSpace(x - 1, y - 1) = WALL;
 			} else if (grid(x, y) < eecs467::emptyThreshold) {
 				if (state(configSpace(x, y)) != WALL) {
 					configSpace(x, y) = EMPTY;
@@ -138,18 +132,18 @@ std::vector<Point<int>> Explore::pickWayPoints(const OccupancyGrid& grid,
 	const std::vector<Point<int>>& points) {
 
 	std::vector<Point<int>> updateWaypoints;
-	if (points.size() == 0) {
+	if (points.size() < 2) {
 		return updateWaypoints;
 	}
 
 	Point<int> startPoint;
 	Point<int> checkPoint;
 
-	int s = 0; //index of startPoint
+	int s = 2; //index of startPoint
 	startPoint = points[s];
 	updateWaypoints.push_back(startPoint);	
 
-	for(unsigned int i = 1; i < points.size(); i++) {
+	for(unsigned int i = s; i < points.size(); i++) {
 		checkPoint = points[i];
 		int step = i - s; //# of steps checkpoint is away from startpoint
 

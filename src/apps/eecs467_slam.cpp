@@ -34,6 +34,8 @@ public:
 
 	lcm::LCM lcm;
 
+	pthread_t pathFinderThreadPid;
+
 public:
 	StateHandler() : mapper(eecs467::gridSeparationSize,
 		eecs467::gridWidthMeters,
@@ -55,6 +57,10 @@ public:
 			&StateHandler::handleMotorFeedbackMessage, this);
 
 		pf.pushMap(mapper.getGrid());
+	}
+
+	void launchThreads(){
+		pthread_create(&pathFinderThreadPid, NULL, &StateHandler::pathFinderThread, this);
 	}
 
 private:
@@ -114,7 +120,13 @@ private:
 		StateHandler* state = (StateHandler*) arg;
 
 		while (1) {
+			usleep(10000);
 			pthread_mutex_lock(&state->dataMutex);
+			if (!state->pf.initialized()) {
+				pthread_mutex_unlock(&state->dataMutex);
+				continue;
+			}
+
 			// getting our current position
 			maebot_pose_t pfPose = state->pf.getBestPose();
 			Point<int> currPos = 
@@ -123,7 +135,6 @@ private:
 
 			state->pathPlanner.getNextWayPoint(*state->mapper.getGrid(),
 				currPos, state->nextWayPoint);
-
 			pthread_mutex_unlock(&state->dataMutex);
 		}
 
@@ -133,6 +144,7 @@ private:
 
 int main() {
 	StateHandler state;
+	state.launchThreads();
 
 	while(1) {
 		state.lcm.handle();

@@ -62,8 +62,8 @@ static const float sensorEndOpen = 1.5;
 static const float sensorEndUnexplored = 0;
 
 // thresholds for whether something is counted as a wall or empty space
-static const int wallThreshold = 40;
-static const int emptyThreshold = -40;
+static const int wallThreshold = 60;
+static const int emptyThreshold = -60;
 
 // grid stuff
 static const float gridWidthMeters = 5;

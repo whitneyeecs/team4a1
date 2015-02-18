@@ -197,15 +197,25 @@ printf("turn?:\t%d\n", turn);
 				for(int i = 0; i < 500; ++i) {
 					state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
 				}
+				pthread_mutex_unlock(&state->dataMutex);
+				usleep(4000000);
+				continue;
 			} else {
 				for (int i = 0; i < 900; ++i) {
 					state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
 				}
-
+				pthread_mutex_unlock(&state->dataMutex);
+				usleep(1000000);
+				continue;
 			}
 			pthread_mutex_unlock(&state->dataMutex);
 
-			usleep(4000000);
+		//	usleep(4000000);
+			
+//			pthread_mutex_lock(&state->dataMutex);
+//			state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
+//			pthread_mutex_unlock(&state->dataMutex);
+//			usleep(200000);
 		}
 
 		return NULL;
