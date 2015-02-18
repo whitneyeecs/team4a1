@@ -25,10 +25,6 @@ int main() {
 
 	printGrid(grid);
 	std::cout << std::endl;
-	printGrid(grid2);
-
-	// OccupancyGrid config = Explore::getConfigurationSpace(grid, 0.6);
-	// printGrid(config);
-
-	// printf("\n%d\t%d\n", WALL, EMPTY);
+	OccupancyGrid config = Explore::getConfigurationSpace(grid, 0.6);
+	printGrid(config);
 }
