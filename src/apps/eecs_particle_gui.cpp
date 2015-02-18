@@ -58,7 +58,7 @@ public:
 	float counter;
 	std::ofstream posefile;
 	std::ofstream probfile;
-	pthread_mutex_t renderMutex;
+	pthread_mutex_t Mutex;
 
 	// lcm
 	lcm::LCM lcm;
@@ -71,7 +71,7 @@ public:
 	vx_event_handler_t* vxeh; // for getting mouse, key, and touch events
 	vx_gtk_display_source_t* appwrap;
 	pthread_mutex_t vxmutex;
-	pthread_t render_pid;
+	pthread_t _pid;
 
 public:
 	StateHandler() {
@@ -89,8 +89,8 @@ public:
 			exit(1);
 		}
 
-		if (pthread_mutex_init(&renderMutex, NULL)) {
-			printf("render mutex not initialized\n");
+		if (pthread_mutex_init(&Mutex, NULL)) {
+			printf(" mutex not initialized\n");
 			exit(1);
 		}
 
@@ -122,7 +122,7 @@ public:
 		const std::string& chan, 
 		const maebot_pose_t* msg) {
 		
-		pthread_mutex_lock(&renderMutex);		
+		pthread_mutex_lock(&Mutex);		
 
 		if(pose_path.size() == 0)
 			posefile.open ("a1_pose_position.csv", std::ios::out);
@@ -135,14 +135,14 @@ public:
 	
 		counter++;
 	
-		pthread_mutex_unlock(&renderMutex);
+		pthread_mutex_unlock(&Mutex);
 	}
 
 	void handleLcmMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_particle_map_t* msg) {
 		
-		pthread_mutex_lock(&renderMutex);
+		pthread_mutex_lock(&Mutex);
 		grid.fromLCM(msg->grid);
 		// assume grid sizes never change
 		if (im == nullptr) {
@@ -212,15 +212,15 @@ public:
 
 		}		
 
-		pthread_mutex_unlock(&renderMutex);
+		pthread_mutex_unlock(&Mutex);
 	}
 
 	void launchThreads() {
 		// lcm handle thread
 		pthread_create(&lcm_pid, NULL, &StateHandler::lcmHandleThread, this);
 
-		// render thread
-		pthread_create(&render_pid, NULL, &StateHandler::renderThread, this);
+		//  thread
+		pthread_create(&_pid, NULL, &StateHandler::renderThread, this);
 	}
 
 private:
@@ -263,7 +263,7 @@ private:
 		StateHandler* state = (StateHandler*) arg;
 
 		while (1) {
-			pthread_mutex_lock(&state->renderMutex);
+			pthread_mutex_lock(&state->Mutex);
 			
 			if (state->im != nullptr) {
 				// resize image from cells to meters
@@ -277,7 +277,7 @@ private:
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
 			}
 
-			// configuration space
+/*			// configuration space
 			if (state->configSpaceIm != nullptr) {
 				// resize image fromabout:startpage cells to meters
 				// then center it
@@ -289,7 +289,7 @@ private:
 					0));
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
 			}
-
+*/
 			//waypoints
 			if (state->wayPoints.size() != 0) {
 				int vec_size = state->wayPoints.size();
@@ -320,7 +320,7 @@ private:
 					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_black, 2.0f)));
 			}
 
-			pthread_mutex_unlock(&state->renderMutex);
+			pthread_mutex_unlock(&state->Mutex);
 			
 			vx_buffer_swap(vx_world_get_buffer(state->vxworld, "state"));
 
