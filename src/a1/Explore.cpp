@@ -41,9 +41,25 @@ bool Explore::detectObstacle(const OccupancyGrid& grid,
 }
 
 bool Explore::getNextWayPoint(const OccupancyGrid& grid, 
-	const Point<int>& currPos,
+	const Point<int>& currPos, float theta,
 	Point<double>& nextWayPoint) {
 	OccupancyGrid space = getConfigurationSpace(grid, safetyRadius);
+
+	float newRadius = safetyRadius * 0.5;
+	while (space(currPos) == WALL) {
+		printf("new radius: %f\n", newRadius);
+		space = getConfigurationSpace(grid, newRadius);
+		newRadius *= 0.5;
+	}
+
+	// if (space(currPos) == WALL) {
+	// 	nextWayPoint = grid_position_to_global_position(currPos, grid);
+	// 	nextWayPoint.x += (target_radius + 0.05) * cos(theta);
+	// 	nextWayPoint.y += (target_radius + 0.05) * sin(theta);
+	// 	_dest = nextWayPoint;
+	// 	return true;
+	// }
+
 	// need a copy of configspace because the search will modify it
 	OccupancyGrid spaceCopy = space;
 	std::vector<Point<int>> points = breadthFirstSearch(space, currPos);
@@ -57,17 +73,10 @@ bool Explore::getNextWayPoint(const OccupancyGrid& grid,
 	_wayPoints = points;
 	_dest = points.front();
 
-	float distance;
-	do {
-		// if no path exists, return
-		if (points.size() == 0) {
-			return false;
-		}
-		nextWayPoint = grid_position_to_global_position(_wayPoints.back(), grid);
-		_wayPoints.pop_back();
-		Point<double> dCurrPos = Point<double>{(double)currPos.x, (double)currPos.y};
-		distance = distance_between_points(nextWayPoint, dCurrPos);
-	} while (distance < target_radius);
+	_wayPoints = points;
+
+	nextWayPoint = grid_position_to_global_position(_wayPoints.back(), grid);
+	_wayPoints.pop_back();
 	return true;
 }
 
@@ -136,12 +145,22 @@ OccupancyGrid Explore::getConfigurationSpace(const OccupancyGrid& grid, float ra
 					configSpace(x, y) = EMPTY;
 				}
 			} else {
-				if (state(configSpace(x, y)) != WALL) {
+				// if (state(configSpace(x, y)) != WALL) {
 					configSpace(x, y) = UNKNOWN;
-				}
+				// }
 			}
 		}
 	}
+
+	for (int y = 0; y < (int)grid.heightInCells(); y++) {
+		for (int x = 0; x < (int)grid.widthInCells(); x++) {
+			if (grid(x, y) > eecs467::emptyThreshold &&
+				grid(x, y) < eecs467::wallThreshold) {
+				configSpace(x, y) = UNKNOWN;
+			}
+		}
+	}
+
 	return configSpace;
 }
 
@@ -156,9 +175,9 @@ std::vector<Point<int>> Explore::pickWayPoints(const OccupancyGrid& grid,
 	Point<int> startPoint;
 	Point<int> checkPoint;
 
-	int s = 2; //index of startPoint
+	int s = 0; //index of startPoint
 	startPoint = points[s];
-	updateWaypoints.push_back(startPoint);	
+	updateWaypoints.push_back(startPoint);
 
 	for(unsigned int i = s; i < points.size(); i++) {
 		checkPoint = points[i];
@@ -247,7 +266,7 @@ std::vector<Point<int>> Explore::breadthFirstSearch(OccupancyGrid& grid,
 				break;
 		}
 	}
-
+	std::cout << "end search" << std::endl;
 	return path;
 }
 

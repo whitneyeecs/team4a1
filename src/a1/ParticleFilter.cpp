@@ -70,6 +70,14 @@ void eecs467::ParticleFilter::toLCM(maebot_particle_map_t& map) {
 	map.grid = _sensorModel.getGrid()->toLCM();
 	map.num_particles = (int32_t)_prior.size();
 	map.particles = _prior;
+
+	for (int i = 0; i < _processedLasers.num_ranges; i+=5) {
+		map.laser_x.push_back(_processedLasers.x_pos[i]);
+		map.laser_y.push_back(_processedLasers.y_pos[i]);
+		map.thetas.push_back(_processedLasers.thetas[i]);
+		map.ranges.push_back(_processedLasers.ranges[i]);
+	}
+	map.num_lasers = map.laser_x.size();
 }
 
 void eecs467::ParticleFilter::process() {
@@ -100,10 +108,10 @@ void eecs467::ParticleFilter::process() {
 		}
 
 #ifdef SENSOR_RAY_TRACE
-		_sensorModel.applyRayTrace(particle, _scan,
+		_processedLasers = _sensorModel.applyRayTrace(particle, _scan,
 			oldPose, particle.pose);
 #else
-		_sensorModel.applyEndPoints(particle, _scan,
+		_processedLasers = _sensorModel.applyEndPoints(particle, _scan,
 			oldPose, particle.pose);
 #endif /* SENSOR_RAY_TRACE */
 	}

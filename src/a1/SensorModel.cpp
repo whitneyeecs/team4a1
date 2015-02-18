@@ -15,7 +15,7 @@ void eecs467::SensorModel::pushMap(const eecs467::OccupancyGrid* map) {
 	_map = map;
 }
 
-void eecs467::SensorModel::applyEndPoints(maebot_particle_t& particle, const maebot_laser_scan_t& scan, const maebot_pose_t& beginPose, const maebot_pose_t& endPose) {
+maebot_processed_laser_scan_t eecs467::SensorModel::applyEndPoints(maebot_particle_t& particle, const maebot_laser_scan_t& scan, const maebot_pose_t& beginPose, const maebot_pose_t& endPose) {
 
 	maebot_processed_laser_scan_t processedScans = 
 		_laserCorrector.processSingleScan(scan, beginPose, endPose);
@@ -48,9 +48,10 @@ void eecs467::SensorModel::applyEndPoints(maebot_particle_t& particle, const mae
 	}
 
 	particle.prob = newProb;
+	return processedScans;
 }
 
-void eecs467::SensorModel::applyRayTrace(maebot_particle_t& particle, const maebot_laser_scan_t& scan, const maebot_pose_t& beginPose, const maebot_pose_t& endPose) {
+maebot_processed_laser_scan_t eecs467::SensorModel::applyRayTrace(maebot_particle_t& particle, const maebot_laser_scan_t& scan, const maebot_pose_t& beginPose, const maebot_pose_t& endPose) {
 
 	maebot_processed_laser_scan_t processedScans = 
 		_laserCorrector.processSingleScan(scan, beginPose, endPose);
@@ -100,6 +101,7 @@ void eecs467::SensorModel::applyRayTrace(maebot_particle_t& particle, const maeb
 	}
 
 	particle.prob = newProb;
+	return processedScans;
 }
 
 const eecs467::OccupancyGrid* eecs467::SensorModel::getGrid() const {
