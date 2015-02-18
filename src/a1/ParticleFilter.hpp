@@ -39,6 +39,7 @@ private:
 	gsl_rng* randGen;
 
 	maebot_laser_scan_t _scan;
+	maebot_processed_laser_scan_t _processedLasers;
 
 	std::vector<maebot_particle_t> _prior;
 	std::vector<maebot_particle_t> _random_samples;

@@ -45,9 +45,9 @@ printf("BAD\n");
 	cur.y = _pose.y;
 	float dist_to_target = distance_between_points(cur, _line[1]);
 
-// printf("\n\ndistance to target:\t%f\n", dist_to_target);
-// printf("cur x:\t%f\tcur y:\t%f\n", cur.x, cur.y);
-// printf("target x:\t%f\ttarget y:\t%f\n", _line[1].x, _line[1].y);
+printf("\n\ndistance to target:\t%f\n", dist_to_target);
+printf("cur x:\t%f\tcur y:\t%f\n", cur.x, cur.y);
+printf("target x:\t%f\ttarget y:\t%f\n", _line[1].x, _line[1].y);
 	
 	if(dist_to_target <= target_radius){
 		cmd.motor_left_speed = stop;
@@ -60,20 +60,21 @@ printf("BAD\n");
 
 	float target_angle;
 	target_angle = atan2(_line[1].y - _pose.y, _line[1].x - _pose.x);
-// printf("pose angle:\t%f\n", _pose.theta);
-// printf("target angle:\t%f\n", target_angle);
+printf("pose angle:\t%f\n", _pose.theta);
+printf("target angle:\t%f\n", target_angle);
 
 	float correct = target_angle - _pose.theta;
 
 	cmd.motor_left_speed = go;
 	cmd.motor_right_speed = go * (1.0  + correct * correct_scale);
-	if(correct > .25){
-		cmd.motor_right_speed = go * 0.7;
-		cmd.motor_left_speed = go * -0.7;
-	}
-	if(correct  < -0.25){
-		cmd.motor_right_speed = go * -0.7;
-		cmd.motor_left_speed = go * 0.7;
+	if(correct > 0.8){
+printf("turning left\n");
+		cmd.motor_right_speed = go * eecs467::turningScale;
+		cmd.motor_left_speed = go * -eecs467::turningScale;
+	}else if(correct  < -0.8){
+printf("turning right\n");
+		cmd.motor_right_speed = go * -eecs467::turningScale;
+		cmd.motor_left_speed = go * eecs467::turningScale;
 	}
 printf("correct is:\t%f\n", correct);
 printf("left motor:\t%f\tright motor:\t%f\n\n\n",cmd.motor_left_speed,cmd.motor_right_speed); 
@@ -82,23 +83,6 @@ printf("left motor:\t%f\tright motor:\t%f\n\n\n",cmd.motor_left_speed,cmd.motor_
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

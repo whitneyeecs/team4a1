@@ -12,4 +12,10 @@ struct maebot_particle_map_t
 	int32_t num_path;
 	float path_x[num_path];
 	float path_y[num_path];
+
+	int32_t num_lasers;
+	float laser_x[num_lasers];
+	float laser_y[num_lasers];
+	float thetas[num_lasers];
+	float ranges[num_lasers];
 }

@@ -51,10 +51,12 @@ public:
 	eecs467::OccupancyGrid configSpaceGrid;
 	image_u8_t* im;
 	image_u8_t* configSpaceIm;
+	maebot_pose_t mostProbable;
 	std::vector<float> path;
 	std::vector<float> prob_path;
 	std::vector<float> pose_path;
 	std::vector<float> wayPoints;
+	std::vector<float> lasers;
 	float counter;
 	float prevX;
 	float prevY;
@@ -185,13 +187,25 @@ public:
 			wayPoints.push_back(0.02);
 		}
 
+		lasers.clear();
+		for (int i = 0; i < msg->num_lasers; ++i) {
+			lasers.push_back(msg->laser_x[i]);
+			lasers.push_back(msg->laser_y[i]);
+			lasers.push_back(0.0f);
+
+			lasers.push_back(msg->laser_x[i] + msg->ranges[i] * cos(msg->thetas[i]));
+			lasers.push_back(msg->laser_y[i] + msg->ranges[i] * sin(msg->thetas[i]));
+			lasers.push_back(0.0f);
+		}
+
 		if(prob_path.size() == 0)
 			probfile.open ("a1_prob_position.csv", std::ios::out);		
 
 		prob_path.push_back(msg->particles[0].pose.x);
 		prob_path.push_back(msg->particles[0].pose.y);
 		prob_path.push_back(0.0f);
-		
+
+		mostProbable = msg->particles[0].pose;
 
 		if( (msg->particles[0].pose.x != prevX) || (msg->particles[0].pose.y != prevY) )
 			probfile << msg->particles[0].pose.x << " " 
@@ -285,19 +299,19 @@ private:
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
 			}
 
-/*			// configuration space
-			if (state->configSpaceIm != nullptr) {
-				// resize image fromabout:startpage cells to meters
-				// then center it
-				eecs467::Point<float> origin = state->grid.originInGlobalFrame();
-				vx_object_t* vim = vxo_chain(
-					vxo_mat_translate3(origin.x, origin.y, 0),
-					vxo_mat_scale((double)state->grid.metersPerCell()),
-					vxo_image_from_u8(state->configSpaceIm, 0,
-					0));
-				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
-			}
-*/
+			// // configuration space
+			// if (state->configSpaceIm != nullptr) {
+			// 	// resize image fromabout:startpage cells to meters
+			// 	// then center it
+			// 	eecs467::Point<float> origin = state->grid.originInGlobalFrame();
+			// 	vx_object_t* vim = vxo_chain(
+			// 		vxo_mat_translate3(origin.x, origin.y, 0),
+			// 		vxo_mat_scale((double)state->grid.metersPerCell()),
+			// 		vxo_image_from_u8(state->configSpaceIm, 0,
+			// 		0));
+			// 	vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"), vim);
+			// }
+
 			//waypoints
 			if (state->wayPoints.size() != 0) {
 				int vec_size = state->wayPoints.size();
@@ -321,12 +335,36 @@ private:
 					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_red, 2.0f)));
 			}
 
+			std::vector<float> mostProbablePoint;
+			mostProbablePoint.push_back(state->mostProbable.x);
+			mostProbablePoint.push_back(state->mostProbable.y);
+			mostProbablePoint.push_back(0.01f);
+
+			mostProbablePoint.push_back(state->mostProbable.x + 0.08 * cos(state->mostProbable.theta));
+			mostProbablePoint.push_back(state->mostProbable.y + 0.08 * sin(state->mostProbable.theta));
+			mostProbablePoint.push_back(0.01f);
+
+			int vec_size = mostProbablePoint.size();
+			vx_resc_t* verts = vx_resc_copyf(mostProbablePoint.data(), vec_size);
+			vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
+				vxo_lines(verts, vec_size / 3, GL_LINES, vxo_lines_style(vx_red, 2.0f)));
+
+
 			if (state->pose_path.size() != 0) {
 				int vec_size = state->pose_path.size();
 				vx_resc_t* verts = vx_resc_copyf((state->pose_path).data(), vec_size);
 				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
 					vxo_points(verts, vec_size / 3,  vxo_points_style(vx_black, 2.0f)));
 			}
+
+			// lasers
+			if (state->lasers.size() != 0) {
+				int vec_size = state->lasers.size();
+				vx_resc_t* verts = vx_resc_copyf((state->lasers).data(), vec_size);
+				vx_buffer_add_back(vx_world_get_buffer(state->vxworld, "state"),
+					vxo_lines(verts, vec_size / 3, GL_LINES, vxo_lines_style(vx_green, 2.0f)));
+			}
+
 
 			pthread_mutex_unlock(&state->Mutex);
 			

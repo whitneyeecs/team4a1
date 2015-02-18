@@ -38,7 +38,7 @@ public:
 	Explore();
 
 	bool getNextWayPoint(const OccupancyGrid& grid, 
-		const Point<int>& currPos, 
+		const Point<int>& currPos, float theta,
 		Point<double>& nextWayPoint);
 
 	bool getCurrentDestination(Point<int>& dest) const;

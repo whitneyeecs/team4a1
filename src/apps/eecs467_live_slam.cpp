@@ -110,8 +110,9 @@ printf("turn?:\t%d\n", turn);
 	void handleMotorFeedbackMessage(const lcm::ReceiveBuffer* rbuf,
 		const std::string& chan, 
 		const maebot_motor_feedback_t* msg) {
+
+// printf("got odometry\n");
 		pthread_mutex_lock(&dataMutex);
-//printf("got odometry\n");
 		pf.pushOdometry(*msg);
 	
 		bool updated = false;
@@ -121,6 +122,7 @@ printf("turn?:\t%d\n", turn);
 			printf("Initialized particle filter\n");
 			nav.pushPose(pf.getBestPose());
 		}
+// printf("process\n");
 
 		// if ready to process
 		if(pf.readyToProcess() && pf.initialized()) {
@@ -159,41 +161,55 @@ printf("turn?:\t%d\n", turn);
 	static void* NavigationThread(void* arg){
 		StateHandler* state = (StateHandler*) arg;
 		state->driving = false; 
-		usleep(5000000);
+		usleep(8e6);
 
 		while(1){
 			if(state->pf.initialized()){
-
 				const OccupancyGrid& grid = *state->mapper.getGrid();
-				if (state->driving) {
-					Point<int> dest;
-					if (!state->pathPlanner.getCurrentDestination(dest)) {
-						continue;
-					}
-					if (grid(dest) < wallThreshold && grid(dest) > emptyThreshold) {
-						continue;
-					}
-				}
-				// if(!state->driving){
+				// if (state->driving) {
+				// 	Point<int> dest;
+				// 	if (!state->pathPlanner.getCurrentDestination(dest)) {
+				// 		continue;
+				// 	}
+				// 	if (grid(dest) < wallThreshold && grid(dest) > emptyThreshold) {
+				// 		continue;
+				// 	}
+				// 	// continue;
+				// }
 
+				// if(!state->driving){
+				printf("recalculation\n");
 				pthread_mutex_lock(&state->dataMutex);
 				// getting our current position
 				maebot_pose_t pfPose = state->pf.getBestPose();
+				printf("particle: %f, %f\n", pfPose.x, pfPose.y);
+
+				Point<double> currPosGlobal = Point<double>{pfPose.x, pfPose.y};
 				Point<int> currPos = 
-					global_position_to_grid_cell(Point<double>{pfPose.x, pfPose.y}, 
+					global_position_to_grid_cell(currPosGlobal, 
 						grid);
+
 				// get the next waypoint
 				if (!state->pathPlanner.getNextWayPoint(grid,
-					currPos, state->wayPoint)) {
-					// stop
+					currPos, pfPose.theta, state->wayPoint)) {
+					printf("COMPLETE!\n");
+					pthread_mutex_unlock(&state->dataMutex);
 					continue;
 				}
+
+
+				float distance = distance_between_points(currPosGlobal, state->wayPoint);
+				if (distance <= target_radius) {
+					state->wayPoint.x = currPosGlobal.x + (target_radius + 0.05) * cos(pfPose.theta);
+					state->wayPoint.y = currPosGlobal.y + (target_radius + 0.05) * sin(pfPose.theta);
+				}
+
 				state->driving = true;
 				state->nav.driveTo(state->wayPoint);
 				pthread_mutex_unlock(&state->dataMutex);
+				printf("end recalculation\n");
 				// }
 			}
-			usleep(1000000);
 		}
 
 		return NULL;
@@ -203,38 +219,16 @@ printf("turn?:\t%d\n", turn);
 		StateHandler* state = (StateHandler*) arg;
 		while(1){
 			pthread_mutex_lock(&state->dataMutex);
-			if(state->command.motor_right_speed == 0.7 * eecs467::go || state->command.motor_right_speed == -0.7 * eecs467::go){
-				for(int i = 0; i < 5; ++i) {
-					state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
-				}
+			if(state->command.motor_right_speed == eecs467::turningScale * eecs467::go 
+				|| state->command.motor_right_speed == -eecs467::turningScale * eecs467::go) {
+				state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
 				pthread_mutex_unlock(&state->dataMutex);
-//				state->command.motor_left_speed = eecs467::stop;
-//				state->command.motor_right_speed = eecs467::stop;
-//				
-//				usleep(10000);
-				
-//				pthread_mutex_lock(&state->dataMutex);
-//				state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
-//				pthread_mutex_unlock(&state->dataMutex);
-
-				usleep(3000000);
-				continue;
+				usleep(250000);
 			} else {
-		//		for (int i = 0; i < 1000; ++i) {
-					state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
-		//		}
+				state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
 				pthread_mutex_unlock(&state->dataMutex);
-				usleep(150000);
-				continue;
+				usleep(250000);
 			}
-			pthread_mutex_unlock(&state->dataMutex);
-
-		//	usleep(4000000);
-			
-//			pthread_mutex_lock(&state->dataMutex);
-//			state->lcm.publish("MAEBOT_MOTOR_COMMAND", &state->command);
-//			pthread_mutex_unlock(&state->dataMutex);
-//			usleep(200000);
 		}
 
 		return NULL;

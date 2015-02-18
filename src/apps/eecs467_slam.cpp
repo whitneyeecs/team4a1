@@ -134,7 +134,7 @@ private:
 					*state->mapper.getGrid());
 
 			state->pathPlanner.getNextWayPoint(*state->mapper.getGrid(),
-				currPos, state->nextWayPoint);
+				currPos, pfPose.theta, state->nextWayPoint);
 			pthread_mutex_unlock(&state->dataMutex);
 		}
 

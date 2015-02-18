@@ -30,10 +30,10 @@ static const float randParticleSpread = 0.05;
 
 // mapping strengths
 static const int emptyEvidenceStrength = 2;
-static const int occupiedEvidenceStrength = 1;
+static const int occupiedEvidenceStrength = 2;
 
 // action model constants
-static const float actionModelK1 = 0.08;
+static const float actionModelK1 = 0.1;
 static const float actionModelK2 = 0.3;
 
 static const float sensorModelStepsPerLaser = 5;
@@ -62,8 +62,8 @@ static const float sensorEndOpen = 1.5;
 static const float sensorEndUnexplored = 0;
 
 // thresholds for whether something is counted as a wall or empty space
-static const int wallThreshold = 60;
-static const int emptyThreshold = -60;
+static const int wallThreshold = 30;
+static const int emptyThreshold = -30;
 
 // grid stuff
 static const float gridWidthMeters = 5;
@@ -74,8 +74,9 @@ static const float gridSeparationSize = 1; // in cells
 //navigation
 static const float Kp = 0.5;
 static const float Kd = 4.0;
-static const float target_radius = 0.1;
+static const float target_radius = 0.12;
 static const float correct_scale = 0.15;
+
 }
 
 #endif /* SLAM_CONSTANTS_HPP */

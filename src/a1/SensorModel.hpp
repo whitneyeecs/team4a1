@@ -33,7 +33,7 @@ public:
 	 * @param beginPose pose that the maebot was at when the scan began
 	 * @param endPose pose that the maebot was at when the scan ended
 	 */
-	void applyEndPoints(maebot_particle_t& particle,
+	maebot_processed_laser_scan_t applyEndPoints(maebot_particle_t& particle,
 		const maebot_laser_scan_t& scan,
 		const maebot_pose_t& beginPose,
 		const maebot_pose_t& endPose);
@@ -47,7 +47,7 @@ public:
 	 * @param beginPose pose that the maebot was at when the scan began
 	 * @param endPose pose that the maebot was at when the scan ended
 	 */
-	void applyRayTrace(maebot_particle_t& particle,
+	maebot_processed_laser_scan_t applyRayTrace(maebot_particle_t& particle,
 		const maebot_laser_scan_t& scan,
 		const maebot_pose_t& beginPose,
 		const maebot_pose_t& endPose);
