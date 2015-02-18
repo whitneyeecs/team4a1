@@ -129,7 +129,7 @@ public:
 		pthread_mutex_lock(&Mutex);		
 
 		if(pose_path.size() == 0)
-			posefile.open ("a1_pose_position.csv", std::ios::out);
+			posefile.open ("a1_pose_position.txt", std::ios::out);
 
 		pose_path.push_back(msg->x);
 		pose_path.push_back(msg->y);
@@ -186,7 +186,7 @@ public:
 		}
 
 		if(prob_path.size() == 0)
-			probfile.open ("a1_prob_position.csv", std::ios::out);		
+			probfile.open ("a1_prob_position.txt", std::ios::out);		
 
 		prob_path.push_back(msg->particles[0].pose.x);
 		prob_path.push_back(msg->particles[0].pose.y);
